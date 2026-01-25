@@ -1,4 +1,4 @@
-// Google AI Image Generation (Imagen 3 via Gemini API)
+// Google Vertex AI Imagen 3 Image Generation
 
 export interface GeneratedImage {
   base64: string;
@@ -12,27 +12,23 @@ export async function generateImage(
 ): Promise<GeneratedImage> {
   const enhancedPrompt = buildEnhancedPrompt(prompt, style);
 
-  // Use Gemini 2.0 Flash with image generation capability
+  // Try Imagen 3 via Generative Language API
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: enhancedPrompt,
-              },
-            ],
-          },
+        instances: [
+          { prompt: enhancedPrompt }
         ],
-        generationConfig: {
-          responseModalities: ['image', 'text'],
-          responseMimeType: 'text/plain',
+        parameters: {
+          sampleCount: 1,
+          aspectRatio: '16:9',
+          personGeneration: 'DONT_ALLOW',
+          safetySetting: 'BLOCK_MEDIUM_AND_ABOVE',
         },
       }),
     }
@@ -40,57 +36,8 @@ export async function generateImage(
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Google AI API error:', response.status, errorText);
-
-    // Try fallback to Imagen 3 endpoint
-    return generateImageWithImagen(enhancedPrompt, apiKey);
-  }
-
-  const data = await response.json();
-
-  // Extract image from Gemini response
-  const candidates = data.candidates || [];
-  for (const candidate of candidates) {
-    const parts = candidate.content?.parts || [];
-    for (const part of parts) {
-      if (part.inlineData) {
-        return {
-          base64: part.inlineData.data,
-          mimeType: part.inlineData.mimeType || 'image/png',
-        };
-      }
-    }
-  }
-
-  throw new Error('No image in response');
-}
-
-// Fallback to Imagen 3 direct API
-async function generateImageWithImagen(
-  prompt: string,
-  apiKey: string
-): Promise<GeneratedImage> {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        instances: [{ prompt }],
-        parameters: {
-          sampleCount: 1,
-          aspectRatio: '16:9',
-          safetyFilterLevel: 'block_only_high',
-        },
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Imagen API error (${response.status}): ${error}`);
+    console.error('Imagen API error:', response.status, errorText);
+    throw new Error(`Google Imagen API error (${response.status}): ${errorText}`);
   }
 
   const data = await response.json();
@@ -99,6 +46,7 @@ async function generateImageWithImagen(
     throw new Error('No image generated from Imagen');
   }
 
+  // Imagen returns bytesBase64Encoded
   return {
     base64: data.predictions[0].bytesBase64Encoded,
     mimeType: 'image/png',

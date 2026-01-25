@@ -320,7 +320,10 @@ NUMBER OF SLIDES: Exactly ${slideCount} slides (this is critical - generate exac
 TONALITY: ${input.tonality}
 LANGUAGE: ${langName} - ALL content must be in ${langName}
 ${largePresInstructions}
-
+${input.customPrompt ? `
+CUSTOM USER INSTRUCTIONS (IMPORTANT - follow these carefully):
+${input.customPrompt}
+` : ""}
 IMPORTANT INSTRUCTIONS:
 - Extract the KEY INSIGHTS and IDEAS from the source material
 - Rewrite everything in YOUR OWN WORDS as original content

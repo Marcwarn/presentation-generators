@@ -45,6 +45,7 @@ export interface PresentationInput {
   knowledgeLevel: KnowledgeLevel;
   imageStyle: ImageStyle;
   slideCount: SlideCount;
+  customPrompt?: string; // User's custom instructions
 }
 
 export interface PresentationStyle {
@@ -162,6 +163,12 @@ export const translations = {
       50: "50 slides",
       70: "70 slides (comprehensive)",
     },
+    customPrompt: "Custom Instructions (Optional)",
+    customPromptPlaceholder: "Add your own instructions, perspectives, specific angles, or context. E.g., 'Focus on ROI arguments', 'Include competitor comparisons', 'Emphasize sustainability aspects'...",
+    enhancePrompt: "✨ Enhance with AI",
+    enhancingPrompt: "Analyzing...",
+    promptEnhanced: "Suggestions added!",
+    promptEnhanceError: "Could not enhance prompt",
     steps: [
       "Hook - Capture attention",
       "Problem - Define the challenge",
@@ -259,6 +266,12 @@ export const translations = {
       50: "50 slides",
       70: "70 slides (omfattande)",
     },
+    customPrompt: "Egna instruktioner (Valfritt)",
+    customPromptPlaceholder: "Lägg till egna instruktioner, perspektiv, specifika vinklar eller kontext. T.ex. 'Fokusera på ROI-argument', 'Inkludera konkurrentjämförelser', 'Betona hållbarhetsaspekter'...",
+    enhancePrompt: "✨ Förbättra med AI",
+    enhancingPrompt: "Analyserar...",
+    promptEnhanced: "Förslag tillagda!",
+    promptEnhanceError: "Kunde inte förbättra prompten",
     steps: [
       "Hook - Fånga uppmärksamhet",
       "Problem - Definiera utmaningen",

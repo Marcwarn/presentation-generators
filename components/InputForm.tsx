@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { FileText, Users, Clock, Sparkles, Globe, Upload, Link, X, Mic, MicOff, Target, BookOpen, GraduationCap, ImageIcon, Layers } from "lucide-react";
+import { FileText, Users, Clock, Sparkles, Globe, Upload, Link, X, Mic, MicOff, Target, BookOpen, GraduationCap, ImageIcon, Layers, Wand2, MessageSquarePlus } from "lucide-react";
 import {
   PresentationInput,
   Audience,
@@ -70,6 +70,9 @@ export default function InputForm({
   const [knowledgeLevel, setKnowledgeLevel] = useState<KnowledgeLevel>("mixed");
   const [imageStyle, setImageStyle] = useState<ImageStyle>("none");
   const [slideCount, setSlideCount] = useState<SlideCount>(20);
+  const [customPrompt, setCustomPrompt] = useState("");
+  const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
+  const [enhanceStatus, setEnhanceStatus] = useState<"idle" | "success" | "error">("idle");
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [isParsingFile, setIsParsingFile] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
@@ -105,6 +108,7 @@ export default function InputForm({
       knowledgeLevel,
       imageStyle,
       slideCount,
+      customPrompt: customPrompt.trim() || undefined,
     });
   };
 
@@ -233,6 +237,58 @@ export default function InputForm({
       ? "Röstinspelning kräver en speech-to-text API (t.ex. OpenAI Whisper). Ljudet spelades in men kunde inte transkriberas utan API-nyckel."
       : "Voice recording requires a speech-to-text API (e.g., OpenAI Whisper). Audio was recorded but cannot be transcribed without API key.");
     return null;
+  };
+
+  // Enhance prompt with AI
+  const handleEnhancePrompt = async () => {
+    if (!topic.trim()) {
+      alert(language === "sv"
+        ? "Ange ett ämne först innan du förbättrar prompten."
+        : "Please enter a topic first before enhancing the prompt.");
+      return;
+    }
+
+    setIsEnhancingPrompt(true);
+    setEnhanceStatus("idle");
+
+    try {
+      const response = await fetch("/api/enhance-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic,
+          content: content.substring(0, 2000),
+          currentPrompt: customPrompt,
+          audience,
+          presentationType,
+          language,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to enhance prompt");
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.suggestions) {
+        // Append suggestions to custom prompt
+        const newPrompt = customPrompt
+          ? `${customPrompt}\n\n--- AI-förslag ---\n${data.suggestions}`
+          : data.suggestions;
+        setCustomPrompt(newPrompt);
+        setEnhanceStatus("success");
+        setTimeout(() => setEnhanceStatus("idle"), 3000);
+      } else {
+        throw new Error(data.error || "Unknown error");
+      }
+    } catch (error) {
+      console.error("Enhance prompt error:", error);
+      setEnhanceStatus("error");
+      setTimeout(() => setEnhanceStatus("idle"), 3000);
+    } finally {
+      setIsEnhancingPrompt(false);
+    }
   };
 
   return (
@@ -563,8 +619,8 @@ export default function InputForm({
         {imageStyle !== "none" && (
           <p className="text-xs text-amber-400/80 mt-2">
             {language === "sv"
-              ? "⚡ AI-bilder genereras med Google Imagen. Kräver GOOGLE_AI_API_KEY i miljövariabler."
-              : "⚡ AI images generated with Google Imagen. Requires GOOGLE_AI_API_KEY in environment."}
+              ? "⚡ AI-bilder genereras med Google Imagen 3. Kräver GOOGLE_AI_API_KEY i miljövariabler."
+              : "⚡ AI images generated with Google Imagen 3. Requires GOOGLE_AI_API_KEY in environment."}
           </p>
         )}
       </div>
@@ -596,6 +652,61 @@ export default function InputForm({
             ? `${slideCount} slides ≈ ${Math.round(slideCount * 1.5)} min presentation`
             : `${slideCount} slides ≈ ${Math.round(slideCount * 1.5)} min presentation`}
         </p>
+      </div>
+
+      {/* Custom Prompt Section */}
+      <div className="border border-purple-500/30 rounded-lg p-4 bg-purple-900/10">
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+          <MessageSquarePlus className="w-4 h-4 text-purple-400" />
+          {t.customPrompt}
+        </label>
+        <textarea
+          value={customPrompt}
+          onChange={(e) => setCustomPrompt(e.target.value)}
+          placeholder={t.customPromptPlaceholder}
+          rows={4}
+          className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none mb-3"
+        />
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleEnhancePrompt}
+            disabled={isEnhancingPrompt || !topic.trim()}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              isEnhancingPrompt
+                ? "bg-purple-700 text-purple-200 cursor-wait"
+                : enhanceStatus === "success"
+                ? "bg-green-600 text-white"
+                : enhanceStatus === "error"
+                ? "bg-red-600 text-white"
+                : "bg-purple-600 hover:bg-purple-500 text-white"
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            {isEnhancingPrompt ? (
+              <>
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {t.enhancingPrompt}
+              </>
+            ) : enhanceStatus === "success" ? (
+              <>✓ {t.promptEnhanced}</>
+            ) : enhanceStatus === "error" ? (
+              <>✗ {t.promptEnhanceError}</>
+            ) : (
+              <>
+                <Wand2 className="w-4 h-4" />
+                {t.enhancePrompt}
+              </>
+            )}
+          </button>
+          <span className="text-xs text-gray-500">
+            {language === "sv"
+              ? "Få AI-hjälp med perspektiv, vinklar och vad du kan ha missat"
+              : "Get AI help with perspectives, angles, and what you might have missed"}
+          </span>
+        </div>
       </div>
 
       {/* Submit Button */}
