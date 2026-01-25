@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { FileText, Users, Clock, Sparkles, Globe, Upload, Link, X, Mic, MicOff, Target, BookOpen, GraduationCap, ImageIcon, Layers, Wand2, MessageSquarePlus } from "lucide-react";
+import { FileText, Users, Clock, Sparkles, Globe, Upload, Link, X, Mic, MicOff, Target, BookOpen, GraduationCap, ImageIcon, Layers, Wand2, MessageSquarePlus, SplitSquareVertical } from "lucide-react";
 import {
   PresentationInput,
   Audience,
@@ -12,6 +12,7 @@ import {
   KnowledgeLevel,
   ImageStyle,
   SlideCount,
+  PresentationParts,
   translations,
 } from "@/lib/types";
 
@@ -36,6 +37,7 @@ const presentationTypes: { value: PresentationType; emoji: string }[] = [
   { value: "pitch", emoji: "💼" },
   { value: "workshop", emoji: "🛠️" },
   { value: "summary", emoji: "📝" },
+  { value: "proposal", emoji: "📄" },
 ];
 const knowledgeLevels: { value: KnowledgeLevel; emoji: string }[] = [
   { value: "beginner", emoji: "🌱" },
@@ -52,6 +54,8 @@ const imageStyles: { value: ImageStyle; emoji: string }[] = [
 ];
 
 const slideCounts: SlideCount[] = [10, 15, 20, 30, 40, 50, 70];
+
+const presentationParts: PresentationParts[] = [1, 2, 3, 4, 5];
 
 const ACCEPTED_FILE_TYPES = ".txt,.md,.pdf,.docx,.pptx";
 
@@ -70,6 +74,7 @@ export default function InputForm({
   const [knowledgeLevel, setKnowledgeLevel] = useState<KnowledgeLevel>("mixed");
   const [imageStyle, setImageStyle] = useState<ImageStyle>("none");
   const [slideCount, setSlideCount] = useState<SlideCount>(20);
+  const [parts, setParts] = useState<PresentationParts>(1);
   const [customPrompt, setCustomPrompt] = useState("");
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [enhanceStatus, setEnhanceStatus] = useState<"idle" | "success" | "error">("idle");
@@ -108,6 +113,7 @@ export default function InputForm({
       knowledgeLevel,
       imageStyle,
       slideCount,
+      presentationParts: parts,
       customPrompt: customPrompt.trim() || undefined,
     });
   };
@@ -652,6 +658,42 @@ export default function InputForm({
             ? `${slideCount} slides ≈ ${Math.round(slideCount * 1.5)} min presentation`
             : `${slideCount} slides ≈ ${Math.round(slideCount * 1.5)} min presentation`}
         </p>
+      </div>
+
+      {/* Presentation Parts Selection */}
+      <div>
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+          <SplitSquareVertical className="w-4 h-4 text-pink-400" />
+          {(t as typeof translations.en).presentationParts || (language === "sv" ? "Dela upp presentation" : "Split Presentation")}
+        </label>
+        <div className="flex gap-2 flex-wrap">
+          {presentationParts.map((p) => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setParts(p)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                parts === p
+                  ? "bg-pink-500 text-white"
+                  : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
+              }`}
+            >
+              {(t as typeof translations.en).presentationPartsOptions?.[p] || (p === 1 ? (language === "sv" ? "En fil" : "One file") : `${p} ${language === "sv" ? "delar" : "parts"}`)}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          {(t as typeof translations.en).presentationPartsHelp || (language === "sv"
+            ? "Dela upp i flera PowerPoint-filer (bra för kurser/utbildningar)"
+            : "Split into multiple PowerPoint files (useful for courses/training)")}
+        </p>
+        {parts > 1 && (
+          <p className="text-xs text-amber-400/80 mt-1">
+            {language === "sv"
+              ? `📁 ${parts} separata filer genereras med ~${Math.ceil(slideCount / parts)} slides vardera`
+              : `📁 ${parts} separate files will be generated with ~${Math.ceil(slideCount / parts)} slides each`}
+          </p>
+        )}
       </div>
 
       {/* Custom Prompt Section */}

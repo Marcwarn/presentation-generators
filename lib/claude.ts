@@ -209,6 +209,54 @@ function getPresentationTypeInstructions(type: string, lang: string): string {
     summary: {
       en: "This is a SUMMARY/REPORT presentation - focus on concise overview and key takeaways. Highlight main findings, conclusions, and recommendations. Be concise and structured.",
       sv: "Detta är en SAMMANFATTNINGS/RAPPORT-presentation - fokusera på koncis översikt och huvudpunkter. Lyft fram huvudsakliga fynd, slutsatser och rekommendationer. Var koncis och strukturerad."
+    },
+    proposal: {
+      en: `This is a PROPOSAL/QUOTE presentation for Doings AB clients - focus on demonstrating understanding, building trust, and presenting a clear path forward.
+
+DOINGS PROPOSAL STRUCTURE (follow this exact flow):
+1. TITLE SLIDE - Professional with client name, project title, date
+2. THEME/TOPIC - What this proposal addresses
+3. CONTENT - Key context that frames the engagement
+4. CONTENT DEEP-DIVE - Supporting details, market context
+5. BACKGROUND - Why this matters now
+6. FRAMEWORK - Doings approach or methodology
+7. SCOPE - Clear boundaries of what's included/excluded
+8. PERCEIVED SITUATION & NEEDS - Demonstrate understanding of client's challenges
+9. PURPOSE & GOALS - What success looks like
+10. OUR RECOMMENDATION - Doings' proposed approach
+11. SUGGESTED NEXT STEPS - Concrete actions
+12. INVESTMENT - Total investment with breakdown
+13. PRICING MODEL - How pricing works
+14. YOUR DOINGS TEAM - The consultants who will work on this
+15. DOINGS DEVELOPMENT PRINCIPLES - How Doings works
+16. COLLECTIVE COMPETENCE - Doings' combined expertise
+17. CLIENT REFERENCES - Case studies (anonymized)
+18. CLOSING/NEXT STEPS - Call to action
+
+TONE: Confident but not arrogant. Show genuine understanding. Be specific about deliverables. Focus on partnership.`,
+      sv: `Detta är en OFFERT/FÖRSLAGS-presentation för Doings AB-kunder - fokusera på att visa förståelse, bygga förtroende och presentera en tydlig väg framåt.
+
+DOINGS OFFERTSTRUKTUR (följ detta flöde):
+1. TITELSIDA - Professionell med kundnamn, projekttitel, datum
+2. TEMA - Vad denna offert adresserar
+3. CONTENT - Nyckelkontext som ramar in uppdraget
+4. CONTENT FÖRDJUPNING - Stödjande detaljer, marknadskontext
+5. BAKGRUND - Varför detta spelar roll nu
+6. FRAMEWORK/RAMVERK - Doings approach eller metodik
+7. SCOPE/OMFATTNING - Vad som ingår/inte ingår
+8. UPPFATTAT LÄGE OCH BEHOV - Visa förståelse för kundens utmaningar
+9. SYFTE OCH MÅLBILD - Hur framgång ser ut
+10. VÅR REKOMMENDATION - Doings föreslagna approach
+11. FÖRSLAG PÅ NÄSTA STEG - Konkreta åtgärder
+12. INVESTERING - Total investering med uppdelning
+13. PRICING MODEL - Hur prissättningen fungerar
+14. ERT TEAM PÅ DOINGS - Konsulterna som kommer arbeta
+15. DOINGS PRINCIPER FÖR UTVECKLING - Hur Doings arbetar
+16. COLLECTIVE COMPETENCE - Doings samlade expertis
+17. KLIENTREFERENSER - Case studies (anonymiserade)
+18. AVSLUTNING/NÄSTA STEG - Call to action
+
+TON: Självsäker men inte arrogant. Visa genuin förståelse. Var specifik om leverabler. Fokusera på partnerskap. Använd Doings-språk: "från ord till handling", "hållbar förändring".`
     }
   };
   return instructions[type]?.[lang === "sv" ? "sv" : "en"] || instructions.keynote[lang === "sv" ? "sv" : "en"];

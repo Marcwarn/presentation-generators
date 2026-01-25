@@ -11,11 +11,12 @@ export type SlideType =
 export type Audience = "c-suite" | "team" | "customers" | "general" | "investors" | "students" | "experts" | "mixed";
 export type Duration = 5 | 10 | 20 | 30 | 45;
 export type Tonality = "inspiring" | "informative" | "provocative";
-export type PresentationType = "keynote" | "educational" | "informative" | "pitch" | "workshop" | "summary";
+export type PresentationType = "keynote" | "educational" | "informative" | "pitch" | "workshop" | "summary" | "proposal";
 export type KnowledgeLevel = "beginner" | "intermediate" | "advanced" | "mixed";
 export type SlideCount = 10 | 15 | 20 | 30 | 40 | 50 | 70;
 export type BackgroundStyle = "dark" | "light" | "gradient";
 export type Language = "en" | "sv";
+export type PresentationParts = 1 | 2 | 3 | 4 | 5;
 
 export interface Slide {
   id: string;
@@ -46,6 +47,7 @@ export interface PresentationInput {
   imageStyle: ImageStyle;
   slideCount: SlideCount;
   customPrompt?: string; // User's custom instructions
+  presentationParts: PresentationParts; // Split into multiple files
 }
 
 export interface PresentationStyle {
@@ -134,6 +136,7 @@ export const translations = {
       pitch: "Pitch / Sales",
       workshop: "Workshop",
       summary: "Summary / Report",
+      proposal: "Proposal / Quote",
     },
     knowledgeLevel: "Knowledge Level",
     knowledgeLevels: {
@@ -163,6 +166,15 @@ export const translations = {
       50: "50 slides",
       70: "70 slides (comprehensive)",
     },
+    presentationParts: "Split Presentation",
+    presentationPartsOptions: {
+      1: "One file",
+      2: "2 parts",
+      3: "3 parts",
+      4: "4 parts",
+      5: "5 parts",
+    },
+    presentationPartsHelp: "Split into multiple PowerPoint files (useful for courses/training)",
     customPrompt: "Custom Instructions (Optional)",
     customPromptPlaceholder: "Add your own instructions, perspectives, specific angles, or context. E.g., 'Focus on ROI arguments', 'Include competitor comparisons', 'Emphasize sustainability aspects'...",
     enhancePrompt: "✨ Enhance with AI",
@@ -237,6 +249,7 @@ export const translations = {
       pitch: "Pitch / Försäljning",
       workshop: "Workshop",
       summary: "Sammanfattning / Rapport",
+      proposal: "Offert / Förslag",
     },
     knowledgeLevel: "Kunskapsnivå",
     knowledgeLevels: {
@@ -266,6 +279,15 @@ export const translations = {
       50: "50 slides",
       70: "70 slides (omfattande)",
     },
+    presentationParts: "Dela upp presentation",
+    presentationPartsOptions: {
+      1: "En fil",
+      2: "2 delar",
+      3: "3 delar",
+      4: "4 delar",
+      5: "5 delar",
+    },
+    presentationPartsHelp: "Dela upp i flera PowerPoint-filer (bra för kurser/utbildningar)",
     customPrompt: "Egna instruktioner (Valfritt)",
     customPromptPlaceholder: "Lägg till egna instruktioner, perspektiv, specifika vinklar eller kontext. T.ex. 'Fokusera på ROI-argument', 'Inkludera konkurrentjämförelser', 'Betona hållbarhetsaspekter'...",
     enhancePrompt: "✨ Förbättra med AI",

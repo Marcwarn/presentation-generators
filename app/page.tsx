@@ -197,6 +197,7 @@ export default function Home() {
                 style={style}
                 language={language}
                 disabled={isLoading}
+                parts={presentation.input.presentationParts}
               />
             )}
 

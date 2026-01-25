@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Loader2, CheckCircle } from "lucide-react";
-import { GeneratedPresentation, PresentationStyle, Language, translations } from "@/lib/types";
+import { Download, Loader2, CheckCircle, Archive } from "lucide-react";
+import { GeneratedPresentation, PresentationStyle, Language, PresentationParts, translations } from "@/lib/types";
 
 interface DownloadButtonProps {
   presentation: GeneratedPresentation | null;
   style: PresentationStyle;
   language: Language;
   disabled?: boolean;
+  parts?: PresentationParts;
 }
 
 export default function DownloadButton({
@@ -16,10 +17,13 @@ export default function DownloadButton({
   style,
   language,
   disabled,
+  parts = 1,
 }: DownloadButtonProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const t = translations[language];
+
+  const isMultiPart = parts > 1;
 
   const handleDownload = async () => {
     if (!presentation) return;
@@ -36,6 +40,7 @@ export default function DownloadButton({
         body: JSON.stringify({
           presentation,
           style,
+          parts,
         }),
       });
 
@@ -47,7 +52,13 @@ export default function DownloadButton({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${presentation.title.replace(/[^a-z0-9]/gi, "_")}_TED_Talk.pptx`;
+
+      // Filename based on single vs multi-part
+      const safeTitle = presentation.title.replace(/[^a-z0-9]/gi, "_");
+      a.download = isMultiPart
+        ? `${safeTitle}_Keynote_${parts}_parts.zip`
+        : `${safeTitle}_Keynote.pptx`;
+
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -63,6 +74,16 @@ export default function DownloadButton({
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  // Download button text based on parts
+  const getDownloadText = () => {
+    if (isMultiPart) {
+      return language === "sv"
+        ? `Ladda ner ${parts} filer (ZIP)`
+        : `Download ${parts} files (ZIP)`;
+    }
+    return t.download;
   };
 
   return (
@@ -87,8 +108,8 @@ export default function DownloadButton({
         </>
       ) : (
         <>
-          <Download className="w-5 h-5" />
-          {t.download}
+          {isMultiPart ? <Archive className="w-5 h-5" /> : <Download className="w-5 h-5" />}
+          {getDownloadText()}
         </>
       )}
     </button>
