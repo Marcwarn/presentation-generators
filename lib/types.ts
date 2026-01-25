@@ -1,4 +1,4 @@
-import { PaletteKey } from "./palettes";
+import { PaletteKey, HaikeiBackground, CustomColors } from "./palettes";
 
 export type SlideType =
   | "statement"
@@ -54,6 +54,8 @@ export interface PresentationStyle {
   palette: PaletteKey;
   backgroundStyle: BackgroundStyle;
   fontStyle: "modern" | "classic" | "tech";
+  haikeiBackground?: HaikeiBackground;
+  customColors?: CustomColors;
 }
 
 export interface GeneratedPresentation {

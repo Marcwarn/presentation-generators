@@ -1,4 +1,7 @@
-export type PaletteKey = "doingsPro" | "doings" | "corporate" | "bold" | "minimal" | "sunset" | "ocean";
+export type PaletteKey = "doingsPro" | "doings" | "corporate" | "bold" | "minimal" | "sunset" | "ocean" | "custom";
+
+// Haikei-inspired background styles
+export type HaikeiBackground = "none" | "wave" | "layeredWaves" | "blob" | "blobScene" | "blurryGradient" | "circleScatter";
 
 export interface Palette {
   name: string;
@@ -89,6 +92,79 @@ export const palettes: Record<PaletteKey, Palette> = {
     contrast: "7c4dff",
     textLight: "FFFFFF",
     textMuted: "94a3b8",
+  },
+  custom: {
+    name: "Custom",
+    darkBg: "0A0A14",
+    navyBg: "0D1B2A",
+    primary: "E85A9C",
+    secondary: "C9A227",
+    accent: "F5A68C",
+    contrast: "4A7C7C",
+    textLight: "FFFFFF",
+    textMuted: "9FAFBF",
+  },
+};
+
+// Custom color interface for user-defined palettes
+export interface CustomColors {
+  color1: string; // Primary/accent
+  color2: string; // Secondary
+  color3: string; // Background dark
+  color4: string; // Background light
+  color5: string; // Text/contrast
+}
+
+export const defaultCustomColors: CustomColors = {
+  color1: "#E85A9C", // Pink
+  color2: "#F5A68C", // Peach
+  color3: "#0D1B2A", // Dark navy
+  color4: "#1B3A4B", // Navy
+  color5: "#FFFFFF", // White
+};
+
+// Haikei background configurations
+export interface HaikeiConfig {
+  name: string;
+  description: string;
+  icon: string;
+}
+
+export const haikeiBackgrounds: Record<HaikeiBackground, HaikeiConfig> = {
+  none: {
+    name: "None",
+    description: "Solid color background",
+    icon: "🚫",
+  },
+  wave: {
+    name: "Wave",
+    description: "Single flowing wave",
+    icon: "🌊",
+  },
+  layeredWaves: {
+    name: "Layered Waves",
+    description: "Multiple layered waves",
+    icon: "〰️",
+  },
+  blob: {
+    name: "Blob",
+    description: "Organic blob shape",
+    icon: "💧",
+  },
+  blobScene: {
+    name: "Blob Scene",
+    description: "Multiple flowing blobs",
+    icon: "🫧",
+  },
+  blurryGradient: {
+    name: "Blurry Gradient",
+    description: "Soft gradient blur",
+    icon: "🌈",
+  },
+  circleScatter: {
+    name: "Circle Scatter",
+    description: "Scattered circles pattern",
+    icon: "⚪",
   },
 };
 

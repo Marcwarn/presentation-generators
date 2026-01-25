@@ -1,6 +1,6 @@
 import PptxGenJS from "pptxgenjs";
 import { GeneratedPresentation, PresentationStyle, Slide } from "./types";
-import { palettes, getHexColor } from "./palettes";
+import { palettes, getHexColor, Palette, CustomColors } from "./palettes";
 
 const fontMappings = {
   modern: { title: "Arial", body: "Arial" },
@@ -8,12 +8,31 @@ const fontMappings = {
   tech: { title: "Consolas", body: "Consolas" },
 };
 
+// Helper to get effective palette from custom colors or predefined
+function getEffectivePalette(style: PresentationStyle): Palette {
+  if (style.palette === "custom" && style.customColors) {
+    // Convert custom colors to palette format
+    return {
+      name: "Custom",
+      darkBg: style.customColors.color3.replace("#", ""),
+      navyBg: style.customColors.color4.replace("#", ""),
+      primary: style.customColors.color1.replace("#", ""),
+      secondary: style.customColors.color2.replace("#", ""),
+      accent: style.customColors.color1.replace("#", ""), // Use primary as accent
+      contrast: style.customColors.color2.replace("#", ""),
+      textLight: style.customColors.color5.replace("#", ""),
+      textMuted: style.customColors.color5.replace("#", "") + "99", // Slightly transparent
+    };
+  }
+  return palettes[style.palette];
+}
+
 export async function generatePptx(
   presentation: GeneratedPresentation,
   style: PresentationStyle
 ): Promise<Buffer> {
   const pptx = new PptxGenJS();
-  const palette = palettes[style.palette];
+  const palette = getEffectivePalette(style);
   const fonts = fontMappings[style.fontStyle];
 
   pptx.author = "TED Talk Generator";
