@@ -14,7 +14,7 @@ export type Tonality = "inspiring" | "informative" | "provocative";
 export type PresentationType = "keynote" | "educational" | "informative" | "pitch" | "workshop" | "summary" | "proposal";
 export type KnowledgeLevel = "beginner" | "intermediate" | "advanced" | "mixed";
 export type SlideCount = 10 | 15 | 20 | 30 | 40 | 50 | 70;
-export type BackgroundStyle = "dark" | "light" | "gradient";
+export type BackgroundStyle = "dark" | "light" | "gradient" | "dynamic";
 export type Language = "en" | "sv";
 export type PresentationParts = 1 | 2 | 3 | 4 | 5;
 

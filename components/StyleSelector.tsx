@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Palette, Sun, Moon, Blend, Waves, ChevronDown, ChevronUp } from "lucide-react";
+import { Palette, Sun, Moon, Blend, Waves, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 import { PresentationStyle, BackgroundStyle, Language, translations } from "@/lib/types";
 import {
   palettes,
@@ -24,10 +24,20 @@ const backgroundStyles: {
   value: BackgroundStyle;
   label: { en: string; sv: string };
   icon: typeof Sun;
+  description?: { en: string; sv: string };
 }[] = [
   { value: "dark", label: { en: "Dark", sv: "Mörk" }, icon: Moon },
   { value: "light", label: { en: "Light", sv: "Ljus" }, icon: Sun },
   { value: "gradient", label: { en: "Gradient", sv: "Gradient" }, icon: Blend },
+  {
+    value: "dynamic",
+    label: { en: "Dynamic", sv: "Dynamisk" },
+    icon: Sparkles,
+    description: {
+      en: "Rich variation with alternating colors, boxes & accents",
+      sv: "Rik variation med växlande färger, boxar & accenter"
+    }
+  },
 ];
 
 const fontStyles: {
@@ -255,22 +265,38 @@ export default function StyleSelector({
         <label className="text-sm font-medium text-gray-300 mb-3 block">
           {t.backgroundStyle}
         </label>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {backgroundStyles.map((bg) => {
             const Icon = bg.icon;
+            const isDynamic = bg.value === "dynamic";
             return (
               <button
                 key={bg.value}
                 type="button"
                 onClick={() => onChange({ ...style, backgroundStyle: bg.value })}
-                className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all ${
+                className={`flex flex-col items-center gap-2 p-3 rounded-lg transition-all relative ${
                   style.backgroundStyle === bg.value
-                    ? "bg-pink-500 text-white"
+                    ? isDynamic
+                      ? "bg-gradient-to-r from-pink-500 to-amber-500 text-white"
+                      : "bg-pink-500 text-white"
+                    : isDynamic
+                    ? "bg-gradient-to-r from-pink-900/30 to-amber-900/30 text-gray-300 hover:from-pink-900/50 hover:to-amber-900/50 border border-pink-500/30"
                     : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
                 }`}
+                title={bg.description?.[language]}
               >
+                {isDynamic && (
+                  <span className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold">
+                    PRO
+                  </span>
+                )}
                 <Icon className="w-5 h-5" />
                 <span className="text-sm">{bg.label[language]}</span>
+                {isDynamic && (
+                  <span className="text-[10px] opacity-70 text-center leading-tight">
+                    {language === "sv" ? "Rik variation" : "Rich variation"}
+                  </span>
+                )}
               </button>
             );
           })}
