@@ -172,7 +172,8 @@ SKRIV ALLT INNEHÅLL PÅ SVENSKA.
 
 VIKTIGT: Returnera ENDAST giltig JSON, ingen markdown-formatering, inga kodblock.`;
 
-function getSlideCount(duration: number): number {
+// Kept for backward compatibility but slideCount from input is preferred
+function getSlideCountFromDuration(duration: number): number {
   switch(duration) {
     case 5: return 5;
     case 10: return 8;
@@ -274,12 +275,32 @@ function getAudienceInstructions(audience: string, lang: string): string {
 }
 
 function buildUserPrompt(input: PresentationInput): string {
-  const slideCount = getSlideCount(input.duration);
+  // Use explicit slideCount if provided, otherwise fall back to duration-based calculation
+  const slideCount = input.slideCount || getSlideCountFromDuration(input.duration);
   const lang = input.language === "sv" ? "sv" : "en";
   const langName = input.language === "sv" ? "svenska" : "English";
 
   const presentationType = input.presentationType || "keynote";
   const knowledgeLevel = input.knowledgeLevel || "mixed";
+
+  // Instructions for how to structure larger presentations
+  const largePresInstructions = slideCount > 30
+    ? (lang === "sv"
+      ? `\n\nVIKTIGT FÖR STOR PRESENTATION (${slideCount} slides):
+- Dela upp innehållet i tydliga sektioner/kapitel
+- Inkludera section divider slides mellan huvuddelarna
+- Använd fler "story" och "comparison" slides för variation
+- Varje huvudämne kan ha flera fördjupningsslides
+- Inkludera mellansammanfattningar var 10-15 slides
+- Avsluta varje sektion med en reflection eller övergångsslide`
+      : `\n\nIMPORTANT FOR LARGE PRESENTATION (${slideCount} slides):
+- Divide content into clear sections/chapters
+- Include section divider slides between main parts
+- Use more "story" and "comparison" slides for variation
+- Each main topic can have multiple deep-dive slides
+- Include interim summaries every 10-15 slides
+- End each section with a reflection or transition slide`)
+    : "";
 
   return `Create a presentation based on the following:
 
@@ -294,9 +315,11 @@ ${getAudienceInstructions(input.audience, lang)}
 
 ${getKnowledgeLevelInstructions(knowledgeLevel, lang)}
 
-DURATION: ${input.duration} minutes (approximately ${slideCount} slides)
+DURATION: ${input.duration} minutes
+NUMBER OF SLIDES: Exactly ${slideCount} slides (this is critical - generate exactly this many)
 TONALITY: ${input.tonality}
 LANGUAGE: ${langName} - ALL content must be in ${langName}
+${largePresInstructions}
 
 IMPORTANT INSTRUCTIONS:
 - Extract the KEY INSIGHTS and IDEAS from the source material
@@ -362,9 +385,13 @@ export async function generatePresentation(
 ): Promise<Omit<GeneratedPresentation, "createdAt" | "input" | "style">> {
   const systemPrompt = input.language === "sv" ? SYSTEM_PROMPT_SV : SYSTEM_PROMPT_EN;
 
+  // Calculate max_tokens based on slide count (approximately 300 tokens per slide)
+  const slideCount = input.slideCount || getSlideCountFromDuration(input.duration);
+  const maxTokens = Math.min(Math.max(4096, slideCount * 400), 16000);
+
   const message = await client.messages.create({
     model: "claude-sonnet-4-20250514",
-    max_tokens: 4096,
+    max_tokens: maxTokens,
     messages: [
       {
         role: "user",

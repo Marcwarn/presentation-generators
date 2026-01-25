@@ -13,6 +13,7 @@ export type Duration = 5 | 10 | 20 | 30 | 45;
 export type Tonality = "inspiring" | "informative" | "provocative";
 export type PresentationType = "keynote" | "educational" | "informative" | "pitch" | "workshop" | "summary";
 export type KnowledgeLevel = "beginner" | "intermediate" | "advanced" | "mixed";
+export type SlideCount = 10 | 15 | 20 | 30 | 40 | 50 | 70;
 export type BackgroundStyle = "dark" | "light" | "gradient";
 export type Language = "en" | "sv";
 
@@ -43,6 +44,7 @@ export interface PresentationInput {
   presentationType: PresentationType;
   knowledgeLevel: KnowledgeLevel;
   imageStyle: ImageStyle;
+  slideCount: SlideCount;
 }
 
 export interface PresentationStyle {
@@ -150,6 +152,16 @@ export const translations = {
       abstract: "Abstract / Artistic",
       illustrative: "Illustrations",
     },
+    slideCount: "Number of Slides",
+    slideCounts: {
+      10: "10 slides (quick)",
+      15: "15 slides",
+      20: "20 slides",
+      30: "30 slides",
+      40: "40 slides",
+      50: "50 slides",
+      70: "70 slides (comprehensive)",
+    },
     steps: [
       "Hook - Capture attention",
       "Problem - Define the challenge",
@@ -236,6 +248,16 @@ export const translations = {
       professional: "Professionella foton",
       abstract: "Abstrakt / Konstnärligt",
       illustrative: "Illustrationer",
+    },
+    slideCount: "Antal slides",
+    slideCounts: {
+      10: "10 slides (snabb)",
+      15: "15 slides",
+      20: "20 slides",
+      30: "30 slides",
+      40: "40 slides",
+      50: "50 slides",
+      70: "70 slides (omfattande)",
     },
     steps: [
       "Hook - Fånga uppmärksamhet",

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { FileText, Users, Clock, Sparkles, Globe, Upload, Link, X, Mic, MicOff, Target, BookOpen, GraduationCap, ImageIcon } from "lucide-react";
+import { FileText, Users, Clock, Sparkles, Globe, Upload, Link, X, Mic, MicOff, Target, BookOpen, GraduationCap, ImageIcon, Layers } from "lucide-react";
 import {
   PresentationInput,
   Audience,
@@ -11,6 +11,7 @@ import {
   PresentationType,
   KnowledgeLevel,
   ImageStyle,
+  SlideCount,
   translations,
 } from "@/lib/types";
 
@@ -50,6 +51,8 @@ const imageStyles: { value: ImageStyle; emoji: string }[] = [
   { value: "illustrative", emoji: "✏️" },
 ];
 
+const slideCounts: SlideCount[] = [10, 15, 20, 30, 40, 50, 70];
+
 const ACCEPTED_FILE_TYPES = ".txt,.md,.pdf,.docx,.pptx";
 
 export default function InputForm({
@@ -66,6 +69,7 @@ export default function InputForm({
   const [presentationType, setPresentationType] = useState<PresentationType>("keynote");
   const [knowledgeLevel, setKnowledgeLevel] = useState<KnowledgeLevel>("mixed");
   const [imageStyle, setImageStyle] = useState<ImageStyle>("none");
+  const [slideCount, setSlideCount] = useState<SlideCount>(20);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [isParsingFile, setIsParsingFile] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
@@ -100,6 +104,7 @@ export default function InputForm({
       presentationType,
       knowledgeLevel,
       imageStyle,
+      slideCount,
     });
   };
 
@@ -562,6 +567,35 @@ export default function InputForm({
               : "⚡ AI images generated with Google Imagen. Requires GOOGLE_AI_API_KEY in environment."}
           </p>
         )}
+      </div>
+
+      {/* Slide Count Selection */}
+      <div>
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+          <Layers className="w-4 h-4 text-pink-400" />
+          {t.slideCount}
+        </label>
+        <div className="flex gap-2 flex-wrap">
+          {slideCounts.map((sc) => (
+            <button
+              key={sc}
+              type="button"
+              onClick={() => setSlideCount(sc)}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                slideCount === sc
+                  ? "bg-pink-500 text-white"
+                  : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
+              }`}
+            >
+              {sc}
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          {language === "sv"
+            ? `${slideCount} slides ≈ ${Math.round(slideCount * 1.5)} min presentation`
+            : `${slideCount} slides ≈ ${Math.round(slideCount * 1.5)} min presentation`}
+        </p>
       </div>
 
       {/* Submit Button */}
