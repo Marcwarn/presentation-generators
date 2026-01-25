@@ -110,6 +110,26 @@ function addDoingsProSlide(
     fill: { type: "solid", color: colors.sidebar }
   });
 
+  // Add background image if present (positioned on right side)
+  if (slideData.image) {
+    slide.addImage({
+      data: slideData.image,
+      x: 5.5,
+      y: 0,
+      w: 4.5,
+      h: 5.63,
+      sizing: { type: "cover", w: 4.5, h: 5.63 }
+    });
+    // Add gradient overlay for text readability
+    slide.addShape("rect", {
+      x: 5.5,
+      y: 0,
+      w: 4.5,
+      h: 5.63,
+      fill: { type: "solid", color: bgColor, transparency: 40 }
+    });
+  }
+
   // Add speaker notes
   if (slideData.speakerNotes) {
     slide.addNotes(slideData.speakerNotes);

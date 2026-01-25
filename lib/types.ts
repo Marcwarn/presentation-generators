@@ -31,6 +31,8 @@ export interface Slide {
   image?: string; // Base64 encoded image
 }
 
+export type ImageStyle = "none" | "professional" | "abstract" | "illustrative";
+
 export interface PresentationInput {
   content: string;
   topic: string;
@@ -40,6 +42,7 @@ export interface PresentationInput {
   language: Language;
   presentationType: PresentationType;
   knowledgeLevel: KnowledgeLevel;
+  imageStyle: ImageStyle;
 }
 
 export interface PresentationStyle {
@@ -140,6 +143,13 @@ export const translations = {
     recording: "Recording...",
     stopRecording: "Stop",
     startRecording: "Record",
+    imageStyle: "Slide Images",
+    imageStyles: {
+      none: "No images",
+      professional: "Professional photos",
+      abstract: "Abstract / Artistic",
+      illustrative: "Illustrations",
+    },
     steps: [
       "Hook - Capture attention",
       "Problem - Define the challenge",
@@ -220,6 +230,13 @@ export const translations = {
     recording: "Spelar in...",
     stopRecording: "Stoppa",
     startRecording: "Spela in",
+    imageStyle: "Bilder i slides",
+    imageStyles: {
+      none: "Inga bilder",
+      professional: "Professionella foton",
+      abstract: "Abstrakt / Konstnärligt",
+      illustrative: "Illustrationer",
+    },
     steps: [
       "Hook - Fånga uppmärksamhet",
       "Problem - Definiera utmaningen",

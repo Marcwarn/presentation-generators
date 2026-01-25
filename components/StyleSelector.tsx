@@ -162,47 +162,96 @@ export default function StyleSelector({
         <label className="text-sm font-medium text-gray-300 mb-3 block">
           {t.preview}
         </label>
-        <div
-          className="aspect-video rounded-lg p-6 flex flex-col justify-center items-center"
-          style={{
-            backgroundColor:
-              style.backgroundStyle === "light"
-                ? "#ffffff"
-                : getHexColor(palettes[style.palette].darkBg),
-            background:
-              style.backgroundStyle === "gradient"
-                ? `linear-gradient(135deg, ${getHexColor(
-                    palettes[style.palette].darkBg
-                  )} 0%, ${getHexColor(palettes[style.palette].navyBg)} 100%)`
-                : undefined,
-          }}
-        >
-          <h3
-            className={`text-2xl font-bold text-center ${
-              style.fontStyle === "modern"
-                ? "font-sans"
-                : style.fontStyle === "classic"
-                ? "font-serif"
-                : "font-mono"
-            }`}
+
+        {/* Doings Pro Preview - special design */}
+        {style.palette === "doingsPro" ? (
+          <div className="aspect-video rounded-lg relative overflow-hidden" style={{ backgroundColor: "#0A0A14" }}>
+            {/* Left sidebar accent */}
+            <div className="absolute left-0 top-0 w-1.5 h-full" style={{ backgroundColor: "#E85A9C" }} />
+
+            {/* Top accent bar */}
+            <div className="absolute top-0 left-8 right-0 h-1" style={{ backgroundColor: "#F5A68C" }} />
+
+            {/* Slide number */}
+            <div className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ backgroundColor: "#E85A9C" }}>
+              1
+            </div>
+
+            {/* Content */}
+            <div className="p-6 pl-10 h-full flex flex-col justify-center">
+              {/* Category tag */}
+              <span className="text-[10px] uppercase tracking-widest mb-2" style={{ color: "#E85A9C" }}>
+                KEYNOTE
+              </span>
+
+              {/* Two-tone title */}
+              <h3 className="text-2xl font-black leading-tight mb-4">
+                <span className="text-white">{language === "sv" ? "DIN RUBRIK" : "YOUR HEADLINE"}</span>
+                <br />
+                <span style={{ color: "#E85A9C" }}>{language === "sv" ? "HÄR" : "HERE"}</span>
+              </h3>
+
+              {/* Quote box with pink border */}
+              <div className="p-3 rounded" style={{ backgroundColor: "#1B2838", border: "2px solid #F5B8C8" }}>
+                <p className="text-sm italic text-white/80">
+                  "{language === "sv" ? "Kraftfull insikt..." : "Powerful insight..."}"
+                </p>
+              </div>
+            </div>
+
+            {/* Decorative accent lines */}
+            <div className="absolute bottom-4 right-4 flex flex-col gap-1">
+              <div className="w-16 h-1" style={{ backgroundColor: "#C9A227" }} />
+              <div className="w-12 h-1 ml-4" style={{ backgroundColor: "#F5A68C" }} />
+            </div>
+
+            {/* Bottom accent */}
+            <div className="absolute bottom-0 left-8 right-0 h-0.5" style={{ backgroundColor: "#4A7C7C" }} />
+          </div>
+        ) : (
+          /* Standard preview for other themes */
+          <div
+            className="aspect-video rounded-lg p-6 flex flex-col justify-center items-center"
             style={{
-              color: getHexColor(palettes[style.palette].primary),
-            }}
-          >
-            {language === "sv" ? "Din rubrik här" : "Your Headline Here"}
-          </h3>
-          <p
-            className="text-sm mt-2 opacity-60"
-            style={{
-              color:
+              backgroundColor:
                 style.backgroundStyle === "light"
-                  ? "#333333"
-                  : getHexColor(palettes[style.palette].textLight),
+                  ? "#ffffff"
+                  : getHexColor(palettes[style.palette].darkBg),
+              background:
+                style.backgroundStyle === "gradient"
+                  ? `linear-gradient(135deg, ${getHexColor(
+                      palettes[style.palette].darkBg
+                    )} 0%, ${getHexColor(palettes[style.palette].navyBg)} 100%)`
+                  : undefined,
             }}
           >
-            {language === "sv" ? "Underrubrik" : "Subtitle text preview"}
-          </p>
-        </div>
+            <h3
+              className={`text-2xl font-bold text-center ${
+                style.fontStyle === "modern"
+                  ? "font-sans"
+                  : style.fontStyle === "classic"
+                  ? "font-serif"
+                  : "font-mono"
+              }`}
+              style={{
+                color: getHexColor(palettes[style.palette].primary),
+              }}
+            >
+              {language === "sv" ? "Din rubrik här" : "Your Headline Here"}
+            </h3>
+            <p
+              className="text-sm mt-2 opacity-60"
+              style={{
+                color:
+                  style.backgroundStyle === "light"
+                    ? "#333333"
+                    : getHexColor(palettes[style.palette].textLight),
+              }}
+            >
+              {language === "sv" ? "Underrubrik" : "Subtitle text preview"}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

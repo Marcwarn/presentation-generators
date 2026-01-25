@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { FileText, Users, Clock, Sparkles, Globe, Upload, Link, X, Mic, MicOff, Target, BookOpen, GraduationCap } from "lucide-react";
+import { FileText, Users, Clock, Sparkles, Globe, Upload, Link, X, Mic, MicOff, Target, BookOpen, GraduationCap, ImageIcon } from "lucide-react";
 import {
   PresentationInput,
   Audience,
@@ -10,6 +10,7 @@ import {
   Language,
   PresentationType,
   KnowledgeLevel,
+  ImageStyle,
   translations,
 } from "@/lib/types";
 
@@ -42,6 +43,13 @@ const knowledgeLevels: { value: KnowledgeLevel; emoji: string }[] = [
   { value: "mixed", emoji: "🎯" },
 ];
 
+const imageStyles: { value: ImageStyle; emoji: string }[] = [
+  { value: "none", emoji: "🚫" },
+  { value: "professional", emoji: "📸" },
+  { value: "abstract", emoji: "🎨" },
+  { value: "illustrative", emoji: "✏️" },
+];
+
 const ACCEPTED_FILE_TYPES = ".txt,.md,.pdf,.docx,.pptx";
 
 export default function InputForm({
@@ -57,6 +65,7 @@ export default function InputForm({
   const [tonality, setTonality] = useState<Tonality>("inspiring");
   const [presentationType, setPresentationType] = useState<PresentationType>("keynote");
   const [knowledgeLevel, setKnowledgeLevel] = useState<KnowledgeLevel>("mixed");
+  const [imageStyle, setImageStyle] = useState<ImageStyle>("none");
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [isParsingFile, setIsParsingFile] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
@@ -90,6 +99,7 @@ export default function InputForm({
       language,
       presentationType,
       knowledgeLevel,
+      imageStyle,
     });
   };
 
@@ -520,6 +530,38 @@ export default function InputForm({
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Image Style Selection */}
+      <div>
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+          <ImageIcon className="w-4 h-4 text-pink-400" />
+          {t.imageStyle}
+        </label>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {imageStyles.map((is) => (
+            <button
+              key={is.value}
+              type="button"
+              onClick={() => setImageStyle(is.value)}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                imageStyle === is.value
+                  ? "bg-pink-500 text-white"
+                  : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
+              }`}
+            >
+              <span className="mr-1">{is.emoji}</span>
+              {t.imageStyles[is.value]}
+            </button>
+          ))}
+        </div>
+        {imageStyle !== "none" && (
+          <p className="text-xs text-amber-400/80 mt-2">
+            {language === "sv"
+              ? "⚡ AI-bilder genereras med Google Imagen. Kräver GOOGLE_AI_API_KEY i miljövariabler."
+              : "⚡ AI images generated with Google Imagen. Requires GOOGLE_AI_API_KEY in environment."}
+          </p>
+        )}
       </div>
 
       {/* Submit Button */}

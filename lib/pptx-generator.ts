@@ -58,6 +58,27 @@ function addSlide(
   const textColor = isLightBg ? "1a1a1a" : palette.textLight;
   const mutedColor = isLightBg ? "666666" : palette.textMuted;
 
+  // Add background image if present
+  if (slide.image) {
+    pptxSlide.addImage({
+      data: slide.image,
+      x: 5,
+      y: 0,
+      w: 5,
+      h: 5.63,
+      sizing: { type: "cover", w: 5, h: 5.63 }
+    });
+    // Add gradient overlay for text readability
+    const overlayColor = isLightBg ? "FFFFFF" : palette.darkBg;
+    pptxSlide.addShape("rect", {
+      x: 5,
+      y: 0,
+      w: 5,
+      h: 5.63,
+      fill: { type: "solid", color: overlayColor, transparency: 50 }
+    });
+  }
+
   if (slide.speakerNotes) {
     pptxSlide.addNotes(slide.speakerNotes);
   }

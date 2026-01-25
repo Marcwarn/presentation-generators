@@ -41,6 +41,163 @@ const slideTypeLabels = {
   cta: { en: "Call to Action", sv: "Uppmaning" },
 };
 
+// Doings Pro color constants
+const DOINGS_PRO_COLORS = {
+  bg: "#0A0A14",
+  bgMid: "#1B2838",
+  magenta: "#E85A9C",
+  gold: "#C9A227",
+  coral: "#F5A68C",
+  teal: "#4A7C7C",
+  pink: "#F5B8C8",
+  text: "#FFFFFF",
+  textMuted: "#9FAFBF",
+  border: "#3D4F5F",
+};
+
+const PRO_ACCENT_ROTATION = [
+  DOINGS_PRO_COLORS.magenta,
+  DOINGS_PRO_COLORS.gold,
+  DOINGS_PRO_COLORS.teal,
+  DOINGS_PRO_COLORS.coral,
+];
+
+// Doings Pro slide preview - matches actual PPT output
+function DoingsProSlidePreview({
+  slide,
+  index,
+}: {
+  slide: Slide;
+  index: number;
+}) {
+  const accentColor = PRO_ACCENT_ROTATION[index % PRO_ACCENT_ROTATION.length];
+  const secondaryAccent = PRO_ACCENT_ROTATION[(index + 1) % PRO_ACCENT_ROTATION.length];
+
+  // Split title for two-tone effect
+  const words = slide.title.split(" ");
+  const midpoint = Math.ceil(words.length / 2);
+  const firstPart = words.slice(0, midpoint).join(" ");
+  const secondPart = words.slice(midpoint).join(" ");
+
+  return (
+    <div
+      className="aspect-video rounded-lg relative overflow-hidden"
+      style={{ backgroundColor: index % 2 === 0 ? DOINGS_PRO_COLORS.bg : "#0D1B2A" }}
+    >
+      {/* Left sidebar accent */}
+      <div
+        className="absolute left-0 top-0 w-1 h-full"
+        style={{ backgroundColor: accentColor }}
+      />
+
+      {/* Slide number */}
+      <div
+        className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+        style={{ backgroundColor: accentColor, color: "#fff" }}
+      >
+        {index + 1}
+      </div>
+
+      {/* Content based on slide type */}
+      <div className="p-6 pl-8 h-full flex flex-col">
+        {/* Category tag */}
+        <span
+          className="text-[10px] uppercase tracking-wider mb-1"
+          style={{ color: accentColor }}
+        >
+          {slide.type}
+        </span>
+
+        {/* Two-tone title */}
+        <h2 className="text-xl font-black leading-tight mb-3">
+          <span style={{ color: DOINGS_PRO_COLORS.text }}>{firstPart.toUpperCase()}</span>
+          {secondPart && (
+            <>
+              <br />
+              <span style={{ color: accentColor }}>{secondPart.toUpperCase()}</span>
+            </>
+          )}
+        </h2>
+
+        {/* Content area */}
+        <div className="flex-1 flex gap-4">
+          {/* Quote box with pink border (if subtitle or quote) */}
+          {(slide.subtitle || slide.quote) && (
+            <div
+              className="flex-1 p-3 rounded"
+              style={{
+                backgroundColor: DOINGS_PRO_COLORS.bgMid,
+                border: `2px solid ${DOINGS_PRO_COLORS.pink}`,
+              }}
+            >
+              <p
+                className="text-sm italic"
+                style={{ color: DOINGS_PRO_COLORS.text }}
+              >
+                "{slide.quote || slide.subtitle}"
+              </p>
+            </div>
+          )}
+
+          {/* List items */}
+          {slide.content && slide.content.length > 0 && (
+            <div className="flex-1">
+              {slide.content.slice(0, 3).map((item, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-2 mb-2 p-2 rounded"
+                  style={{ backgroundColor: DOINGS_PRO_COLORS.bgMid }}
+                >
+                  <span
+                    className="text-xs font-bold mt-0.5"
+                    style={{ color: PRO_ACCENT_ROTATION[i % 4] }}
+                  >
+                    0{i + 1}
+                  </span>
+                  <span
+                    className="text-xs"
+                    style={{ color: DOINGS_PRO_COLORS.textMuted }}
+                  >
+                    {item}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Right side insight box */}
+          <div className="w-1/3">
+            <span
+              className="text-[9px] uppercase tracking-wider"
+              style={{ color: secondaryAccent }}
+            >
+              INSIKT
+            </span>
+            <p
+              className="text-[10px] mt-1"
+              style={{ color: DOINGS_PRO_COLORS.textMuted }}
+            >
+              {slide.speakerNotes?.substring(0, 80)}...
+            </p>
+          </div>
+        </div>
+
+        {/* Decorative accent lines */}
+        <div className="absolute bottom-4 right-4 flex flex-col gap-1">
+          <div
+            className="w-16 h-1"
+            style={{ backgroundColor: DOINGS_PRO_COLORS.gold }}
+          />
+          <div
+            className="w-12 h-1 ml-4"
+            style={{ backgroundColor: DOINGS_PRO_COLORS.coral }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SlidePreview({
   slide,
   style,
@@ -52,6 +209,11 @@ function SlidePreview({
   index: number;
   language: Language;
 }) {
+  // Use special Doings Pro preview for that palette
+  if (style.palette === "doingsPro") {
+    return <DoingsProSlidePreview slide={slide} index={index} />;
+  }
+
   const palette = palettes[style.palette];
   const isLightBg = style.backgroundStyle === "light" || style.palette === "minimal";
   const bgColor = isLightBg ? "#ffffff" : getHexColor(palette.darkBg);
