@@ -825,3 +825,39 @@ function addCtaSlide(
     });
   }
 }
+
+// Client-side download function for browser use
+export async function downloadPresentation(
+  presentation: GeneratedPresentation
+): Promise<void> {
+  const pptx = new PptxGenJS();
+  const style = presentation.style;
+  const palette = getEffectivePalette(style);
+  const fonts = fontMappings[style.fontStyle];
+
+  pptx.author = "Keynote Builder";
+  pptx.title = presentation.title;
+  pptx.subject = "Presentation";
+  pptx.company = "Generated with AI";
+
+  pptx.defineSlideMaster({
+    title: "TED_MASTER",
+    background:
+      style.backgroundStyle === "light"
+        ? { color: "FFFFFF" }
+        : { color: palette.darkBg },
+  });
+
+  for (let i = 0; i < presentation.slides.length; i++) {
+    const slide = presentation.slides[i];
+    addSlide(pptx, slide, palette, fonts, style, i);
+  }
+
+  // Generate filename from title
+  const filename = presentation.title
+    .replace(/[^a-zA-Z0-9\s]/g, "")
+    .replace(/\s+/g, "_")
+    .substring(0, 50);
+
+  await pptx.writeFile({ fileName: `${filename}.pptx` });
+}
