@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { FileText, Users, Clock, Sparkles, Globe, Upload, Link, X, Mic, MicOff, Target, BookOpen, GraduationCap, ImageIcon, Layers, Wand2, MessageSquarePlus, SplitSquareVertical, RefreshCw, Trash2 } from "lucide-react";
+import { FileText, Users, Clock, Sparkles, Globe, Upload, Link, X, Mic, MicOff, Target, BookOpen, GraduationCap, ImageIcon, Layers, Wand2, MessageSquarePlus, SplitSquareVertical, Trash2, ChevronDown, ChevronUp, Settings2 } from "lucide-react";
 import {
   PresentationInput,
   Audience,
@@ -62,6 +62,53 @@ const presentationParts: PresentationParts[] = [1, 2, 3, 4, 5];
 
 const ACCEPTED_FILE_TYPES = ".txt,.md,.pdf,.docx,.pptx";
 
+// Collapsible Section Component
+function CollapsibleSection({
+  title,
+  icon,
+  isOpen,
+  onToggle,
+  summary,
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  isOpen: boolean;
+  onToggle: () => void;
+  summary?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="border border-gray-700/50 rounded-xl overflow-hidden bg-gray-800/20">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-800/30 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          {icon}
+          <span className="text-sm font-medium text-gray-300">{title}</span>
+          {!isOpen && summary && (
+            <span className="text-xs text-pink-400 ml-2 px-2 py-0.5 bg-pink-500/10 rounded-full">
+              {summary}
+            </span>
+          )}
+        </div>
+        {isOpen ? (
+          <ChevronUp className="w-4 h-4 text-gray-500" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-gray-500" />
+        )}
+      </button>
+      {isOpen && (
+        <div className="px-4 pb-4 pt-2">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function InputForm({
   onSubmit,
   isLoading,
@@ -90,6 +137,18 @@ export default function InputForm({
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Collapsible section states
+  const [openSections, setOpenSections] = useState({
+    presentationType: true,
+    audience: false,
+    settings: false,
+    customPrompt: false,
+  });
+
+  const toggleSection = (section: keyof typeof openSections) => {
+    setOpenSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
   const t = translations[language] as typeof translations.en;
 
@@ -235,8 +294,6 @@ export default function InputForm({
         const audioBlob = new Blob(chunks, { type: 'audio/webm' });
         stream.getTracks().forEach(track => track.stop());
 
-        // Here we would normally send to a speech-to-text API
-        // For now, we'll show a message that the feature requires API integration
         const transcribedText = await transcribeAudio(audioBlob);
         if (transcribedText) {
           setContent(prev => prev ? prev + "\n\n" + transcribedText : transcribedText);
@@ -266,7 +323,6 @@ export default function InputForm({
   const transcribeAudio = async (audioBlob: Blob): Promise<string | null> => {
     try {
       const formData = new FormData();
-      // Convert blob to file with proper extension
       const audioFile = new File([audioBlob], "recording.webm", {
         type: audioBlob.type || "audio/webm",
       });
@@ -326,7 +382,6 @@ export default function InputForm({
       const data = await response.json();
 
       if (data.success && data.suggestions) {
-        // Append suggestions to custom prompt
         const newPrompt = customPrompt
           ? `${customPrompt}\n\n--- AI-förslag ---\n${data.suggestions}`
           : data.suggestions;
@@ -346,17 +401,13 @@ export default function InputForm({
   };
 
   // Helper to render a section with prompt editor
-  const renderSectionWithEditor = (
+  const renderWithPromptEditor = (
     category: "audience" | "tonality" | "presentationType" | "knowledgeLevel" | "imageStyle",
     value: string,
-    label: React.ReactNode,
     children: React.ReactNode
   ) => (
     <div>
-      <div className="flex items-center justify-between mb-2">
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
-          {label}
-        </label>
+      <div className="flex justify-end mb-2">
         <PromptEditor
           category={category}
           value={value}
@@ -371,7 +422,7 @@ export default function InputForm({
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {/* Persona Selector & Language */}
       <div className="flex flex-wrap items-start gap-4 justify-between">
         <PersonaSelector
@@ -546,7 +597,7 @@ export default function InputForm({
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder={t.contentPlaceholder}
-          rows={8}
+          rows={6}
           className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all resize-none"
         />
         <p className="text-xs text-gray-500 mt-1">
@@ -554,12 +605,254 @@ export default function InputForm({
         </p>
       </div>
 
-      {/* Custom Prompt Section - moved up for visibility */}
-      <div className="border border-purple-500/30 rounded-lg p-4 bg-purple-900/10">
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
-          <MessageSquarePlus className="w-4 h-4 text-purple-400" />
-          {t.customPrompt}
-        </label>
+      {/* Presentation Type & Audience Section */}
+      <CollapsibleSection
+        title={t.presentationType}
+        icon={<Target className="w-4 h-4 text-pink-400" />}
+        isOpen={openSections.presentationType}
+        onToggle={() => toggleSection("presentationType")}
+        summary={t.presentationTypes[presentationType]}
+      >
+        {renderWithPromptEditor("presentationType", presentationType,
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {presentationTypes.map((pt) => (
+              <button
+                key={pt.value}
+                type="button"
+                onClick={() => setPresentationType(pt.value)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  presentationType === pt.value
+                    ? "bg-pink-500 text-white"
+                    : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
+                }`}
+              >
+                <span className="mr-1">{pt.emoji}</span>
+                {t.presentationTypes[pt.value]}
+              </button>
+            ))}
+          </div>
+        )}
+      </CollapsibleSection>
+
+      {/* Audience Section */}
+      <CollapsibleSection
+        title={t.audience}
+        icon={<Users className="w-4 h-4 text-pink-400" />}
+        isOpen={openSections.audience}
+        onToggle={() => toggleSection("audience")}
+        summary={t.audiences[audience]}
+      >
+        {renderWithPromptEditor("audience", audience,
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {audiences.map((a) => (
+              <button
+                key={a}
+                type="button"
+                onClick={() => setAudience(a)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  audience === a
+                    ? "bg-pink-500 text-white"
+                    : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
+                }`}
+              >
+                {t.audiences[a]}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Knowledge Level inside Audience */}
+        <div className="mt-4 pt-4 border-t border-gray-700/50">
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-2">
+            <GraduationCap className="w-4 h-4" />
+            {t.knowledgeLevel}
+          </label>
+          {renderWithPromptEditor("knowledgeLevel", knowledgeLevel,
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {knowledgeLevels.map((kl) => (
+                <button
+                  key={kl.value}
+                  type="button"
+                  onClick={() => setKnowledgeLevel(kl.value)}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    knowledgeLevel === kl.value
+                      ? "bg-pink-500 text-white"
+                      : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
+                  }`}
+                >
+                  <span className="mr-1">{kl.emoji}</span>
+                  {t.knowledgeLevels[kl.value]}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Tonality inside Audience */}
+        <div className="mt-4 pt-4 border-t border-gray-700/50">
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-2">
+            <BookOpen className="w-4 h-4" />
+            {t.tonality}
+          </label>
+          {renderWithPromptEditor("tonality", tonality,
+            <div className="flex gap-2">
+              {tonalities.map((ton) => (
+                <button
+                  key={ton.value}
+                  type="button"
+                  onClick={() => setTonality(ton.value)}
+                  className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    tonality === ton.value
+                      ? "bg-pink-500 text-white"
+                      : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
+                  }`}
+                >
+                  <span className="mr-1">{ton.emoji}</span>
+                  {t.tonalities[ton.value]}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </CollapsibleSection>
+
+      {/* Settings Section (Slides, Duration, Images, Parts) */}
+      <CollapsibleSection
+        title={language === "sv" ? "Inställningar" : "Settings"}
+        icon={<Settings2 className="w-4 h-4 text-pink-400" />}
+        isOpen={openSections.settings}
+        onToggle={() => toggleSection("settings")}
+        summary={`${slideCount} slides, ${duration} min`}
+      >
+        {/* Slide Count */}
+        <div className="mb-4">
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-2">
+            <Layers className="w-4 h-4" />
+            {t.slideCount}
+          </label>
+          <div className="flex gap-2 flex-wrap">
+            {slideCounts.map((sc) => (
+              <button
+                key={sc}
+                type="button"
+                onClick={() => setSlideCount(sc)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  slideCount === sc
+                    ? "bg-pink-500 text-white"
+                    : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
+                }`}
+              >
+                {sc}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            {language === "sv"
+              ? `${slideCount} slides ≈ ${Math.round(slideCount * 1.5)} min presentation`
+              : `${slideCount} slides ≈ ${Math.round(slideCount * 1.5)} min presentation`}
+          </p>
+        </div>
+
+        {/* Duration */}
+        <div className="mb-4 pt-4 border-t border-gray-700/50">
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-2">
+            <Clock className="w-4 h-4" />
+            {t.duration}
+          </label>
+          <div className="flex gap-2 flex-wrap">
+            {durations.map((d) => (
+              <button
+                key={d}
+                type="button"
+                onClick={() => setDuration(d)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  duration === d
+                    ? "bg-pink-500 text-white"
+                    : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
+                }`}
+              >
+                {d} min
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Image Style */}
+        <div className="mb-4 pt-4 border-t border-gray-700/50">
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-2">
+            <ImageIcon className="w-4 h-4" />
+            {t.imageStyle}
+          </label>
+          {renderWithPromptEditor("imageStyle", imageStyle,
+            <>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {imageStyles.map((is) => (
+                  <button
+                    key={is.value}
+                    type="button"
+                    onClick={() => setImageStyle(is.value)}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      imageStyle === is.value
+                        ? "bg-pink-500 text-white"
+                        : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
+                    }`}
+                  >
+                    <span className="mr-1">{is.emoji}</span>
+                    {t.imageStyles[is.value]}
+                  </button>
+                ))}
+              </div>
+              {imageStyle !== "none" && (
+                <p className="text-xs text-amber-400/80 mt-2">
+                  {language === "sv"
+                    ? "⚡ AI-bilder genereras med Gemini 2.0 Flash. Kräver GOOGLE_AI_API_KEY."
+                    : "⚡ AI images generated with Gemini 2.0 Flash. Requires GOOGLE_AI_API_KEY."}
+                </p>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Presentation Parts */}
+        <div className="pt-4 border-t border-gray-700/50">
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-400 mb-2">
+            <SplitSquareVertical className="w-4 h-4" />
+            {(t as typeof translations.en).presentationParts || (language === "sv" ? "Dela upp presentation" : "Split Presentation")}
+          </label>
+          <div className="flex gap-2 flex-wrap">
+            {presentationParts.map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setParts(p)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  parts === p
+                    ? "bg-pink-500 text-white"
+                    : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
+                }`}
+              >
+                {(t as typeof translations.en).presentationPartsOptions?.[p] || (p === 1 ? (language === "sv" ? "En fil" : "One file") : `${p} ${language === "sv" ? "delar" : "parts"}`)}
+              </button>
+            ))}
+          </div>
+          {parts > 1 && (
+            <p className="text-xs text-amber-400/80 mt-2">
+              {language === "sv"
+                ? `📁 ${parts} separata filer genereras med ~${Math.ceil(slideCount / parts)} slides vardera`
+                : `📁 ${parts} separate files will be generated with ~${Math.ceil(slideCount / parts)} slides each`}
+            </p>
+          )}
+        </div>
+      </CollapsibleSection>
+
+      {/* Custom Prompt Section */}
+      <CollapsibleSection
+        title={t.customPrompt}
+        icon={<MessageSquarePlus className="w-4 h-4 text-purple-400" />}
+        isOpen={openSections.customPrompt}
+        onToggle={() => toggleSection("customPrompt")}
+        summary={customPrompt ? (language === "sv" ? "Anpassad" : "Custom") : undefined}
+      >
         <textarea
           value={customPrompt}
           onChange={(e) => setCustomPrompt(e.target.value)}
@@ -612,239 +905,7 @@ export default function InputForm({
             </button>
           )}
         </div>
-      </div>
-
-      {/* Presentation Type Selection with Prompt Editor */}
-      {renderSectionWithEditor(
-        "presentationType",
-        presentationType,
-        <>
-          <Target className="w-4 h-4 text-pink-400" />
-          {t.presentationType}
-        </>,
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {presentationTypes.map((pt) => (
-            <button
-              key={pt.value}
-              type="button"
-              onClick={() => setPresentationType(pt.value)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                presentationType === pt.value
-                  ? "bg-pink-500 text-white"
-                  : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
-              }`}
-            >
-              <span className="mr-1">{pt.emoji}</span>
-              {t.presentationTypes[pt.value]}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Audience Selection with Prompt Editor */}
-      {renderSectionWithEditor(
-        "audience",
-        audience,
-        <>
-          <Users className="w-4 h-4 text-pink-400" />
-          {t.audience}
-        </>,
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {audiences.map((a) => (
-            <button
-              key={a}
-              type="button"
-              onClick={() => setAudience(a)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                audience === a
-                  ? "bg-pink-500 text-white"
-                  : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
-              }`}
-            >
-              {t.audiences[a]}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Knowledge Level Selection with Prompt Editor */}
-      {renderSectionWithEditor(
-        "knowledgeLevel",
-        knowledgeLevel,
-        <>
-          <GraduationCap className="w-4 h-4 text-pink-400" />
-          {t.knowledgeLevel}
-        </>,
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {knowledgeLevels.map((kl) => (
-            <button
-              key={kl.value}
-              type="button"
-              onClick={() => setKnowledgeLevel(kl.value)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                knowledgeLevel === kl.value
-                  ? "bg-pink-500 text-white"
-                  : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
-              }`}
-            >
-              <span className="mr-1">{kl.emoji}</span>
-              {t.knowledgeLevels[kl.value]}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Duration Selection */}
-      <div>
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
-          <Clock className="w-4 h-4 text-pink-400" />
-          {t.duration}
-        </label>
-        <div className="flex gap-2 flex-wrap">
-          {durations.map((d) => (
-            <button
-              key={d}
-              type="button"
-              onClick={() => setDuration(d)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                duration === d
-                  ? "bg-pink-500 text-white"
-                  : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
-              }`}
-            >
-              {d} min
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Tonality Selection with Prompt Editor */}
-      {renderSectionWithEditor(
-        "tonality",
-        tonality,
-        <>
-          <BookOpen className="w-4 h-4 text-pink-400" />
-          {t.tonality}
-        </>,
-        <div className="flex gap-2">
-          {tonalities.map((ton) => (
-            <button
-              key={ton.value}
-              type="button"
-              onClick={() => setTonality(ton.value)}
-              className={`flex-1 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
-                tonality === ton.value
-                  ? "bg-pink-500 text-white"
-                  : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
-              }`}
-            >
-              <span className="mr-2">{ton.emoji}</span>
-              {t.tonalities[ton.value]}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Image Style Selection with Prompt Editor */}
-      {renderSectionWithEditor(
-        "imageStyle",
-        imageStyle,
-        <>
-          <ImageIcon className="w-4 h-4 text-pink-400" />
-          {t.imageStyle}
-        </>,
-        <>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {imageStyles.map((is) => (
-              <button
-                key={is.value}
-                type="button"
-                onClick={() => setImageStyle(is.value)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                  imageStyle === is.value
-                    ? "bg-pink-500 text-white"
-                    : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
-                }`}
-              >
-                <span className="mr-1">{is.emoji}</span>
-                {t.imageStyles[is.value]}
-              </button>
-            ))}
-          </div>
-          {imageStyle !== "none" && (
-            <p className="text-xs text-amber-400/80 mt-2">
-              {language === "sv"
-                ? "⚡ AI-bilder genereras med Gemini 2.0 Flash. Kräver GOOGLE_AI_API_KEY i miljövariabler."
-                : "⚡ AI images generated with Gemini 2.0 Flash. Requires GOOGLE_AI_API_KEY in environment."}
-            </p>
-          )}
-        </>
-      )}
-
-      {/* Slide Count Selection */}
-      <div>
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
-          <Layers className="w-4 h-4 text-pink-400" />
-          {t.slideCount}
-        </label>
-        <div className="flex gap-2 flex-wrap">
-          {slideCounts.map((sc) => (
-            <button
-              key={sc}
-              type="button"
-              onClick={() => setSlideCount(sc)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                slideCount === sc
-                  ? "bg-pink-500 text-white"
-                  : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
-              }`}
-            >
-              {sc}
-            </button>
-          ))}
-        </div>
-        <p className="text-xs text-gray-500 mt-2">
-          {language === "sv"
-            ? `${slideCount} slides ≈ ${Math.round(slideCount * 1.5)} min presentation`
-            : `${slideCount} slides ≈ ${Math.round(slideCount * 1.5)} min presentation`}
-        </p>
-      </div>
-
-      {/* Presentation Parts Selection */}
-      <div>
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
-          <SplitSquareVertical className="w-4 h-4 text-pink-400" />
-          {(t as typeof translations.en).presentationParts || (language === "sv" ? "Dela upp presentation" : "Split Presentation")}
-        </label>
-        <div className="flex gap-2 flex-wrap">
-          {presentationParts.map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setParts(p)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                parts === p
-                  ? "bg-pink-500 text-white"
-                  : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
-              }`}
-            >
-              {(t as typeof translations.en).presentationPartsOptions?.[p] || (p === 1 ? (language === "sv" ? "En fil" : "One file") : `${p} ${language === "sv" ? "delar" : "parts"}`)}
-            </button>
-          ))}
-        </div>
-        <p className="text-xs text-gray-500 mt-2">
-          {(t as typeof translations.en).presentationPartsHelp || (language === "sv"
-            ? "Dela upp i flera PowerPoint-filer (bra för kurser/utbildningar)"
-            : "Split into multiple PowerPoint files (useful for courses/training)")}
-        </p>
-        {parts > 1 && (
-          <p className="text-xs text-amber-400/80 mt-1">
-            {language === "sv"
-              ? `📁 ${parts} separata filer genereras med ~${Math.ceil(slideCount / parts)} slides vardera`
-              : `📁 ${parts} separate files will be generated with ~${Math.ceil(slideCount / parts)} slides each`}
-          </p>
-        )}
-      </div>
+      </CollapsibleSection>
 
       {/* Submit Button */}
       <button
