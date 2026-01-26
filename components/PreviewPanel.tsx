@@ -84,9 +84,27 @@ function DoingsProSlidePreview({
       className="aspect-video rounded-lg relative overflow-hidden"
       style={{ backgroundColor: index % 2 === 0 ? DOINGS_PRO_COLORS.bg : "#0D1B2A" }}
     >
+      {/* Background image if present */}
+      {slide.image && (
+        <>
+          <img
+            src={slide.image.startsWith("data:") ? slide.image : `data:image/png;base64,${slide.image}`}
+            alt=""
+            className="absolute right-0 top-0 w-1/2 h-full object-cover"
+          />
+          {/* Gradient overlay */}
+          <div
+            className="absolute right-0 top-0 w-1/2 h-full"
+            style={{
+              background: "linear-gradient(to right, rgba(10,10,20,0.9) 0%, rgba(10,10,20,0.4) 100%)",
+            }}
+          />
+        </>
+      )}
+
       {/* Left sidebar accent */}
       <div
-        className="absolute left-0 top-0 w-1 h-full"
+        className="absolute left-0 top-0 w-1 h-full z-10"
         style={{ backgroundColor: accentColor }}
       />
 
@@ -243,8 +261,28 @@ function SlidePreview({
       className={`aspect-video rounded-lg p-6 flex flex-col ${fontClass} relative overflow-hidden`}
       style={bgStyle}
     >
+      {/* Background image if present */}
+      {slide.image && (
+        <>
+          <img
+            src={slide.image.startsWith("data:") ? slide.image : `data:image/png;base64,${slide.image}`}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          {/* Gradient overlay for text readability */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: isLightBg
+                ? "linear-gradient(to right, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.3) 100%)"
+                : "linear-gradient(to right, rgba(10,10,20,0.95) 0%, rgba(10,10,20,0.8) 50%, rgba(10,10,20,0.4) 100%)",
+            }}
+          />
+        </>
+      )}
+
       <div
-        className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold"
+        className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold z-10"
         style={{
           backgroundColor: getHexColor(palette.primary),
           color: "#ffffff",
@@ -253,14 +291,14 @@ function SlidePreview({
         {index + 1}
       </div>
 
-      <div className="flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-4 relative z-10">
         <Icon className="w-4 h-4" style={{ color: getHexColor(palette.accent) }} />
         <span className="text-xs uppercase tracking-wide" style={{ color: mutedColor }}>
           {slideTypeLabels[slide.type][language]}
         </span>
       </div>
 
-      <div className="flex-1 flex flex-col justify-center">
+      <div className="flex-1 flex flex-col justify-center relative z-10">
         {slide.type === "statement" && (
           <div className="text-center">
             <h2

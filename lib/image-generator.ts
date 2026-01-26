@@ -93,12 +93,24 @@ async function tryGenerateWithModel(
 
 function buildEnhancedPrompt(prompt: string, style: string): string {
   const styleModifiers: Record<string, string> = {
-    photorealistic: 'Professional photography, high resolution, realistic lighting, corporate style, no text or words in the image',
-    artistic: 'Artistic illustration, vibrant colors, creative composition, modern design, abstract shapes, no text or words in the image',
-    minimalist: 'Minimalist design, clean lines, simple geometric shapes, professional presentation style, dark background with subtle accent colors, no text or words in the image',
+    photorealistic: 'Professional photography, high resolution, realistic lighting, corporate style',
+    artistic: 'Artistic illustration, vibrant colors, creative composition, modern design, abstract shapes',
+    minimalist: 'Minimalist design, clean lines, simple geometric shapes, professional presentation style, dark background with subtle accent colors',
   };
 
-  return `Generate an image: ${prompt}. Style: ${styleModifiers[style]}. The image should be suitable for a professional presentation slide with 16:9 aspect ratio. Do NOT include any text, words, letters, or numbers in the image.`;
+  // CRITICAL: Explicitly forbid any text in the image multiple times
+  return `Generate a PURELY VISUAL image (no text whatsoever): ${prompt}.
+
+CRITICAL REQUIREMENTS:
+- ABSOLUTELY NO TEXT, WORDS, LETTERS, NUMBERS, CAPTIONS, LABELS, OR TYPOGRAPHY IN THE IMAGE
+- NO watermarks, titles, subtitles, or any written content
+- The image must be 100% visual/graphical only
+- This is a background image for a presentation - text will be overlaid separately
+
+Style: ${styleModifiers[style]}.
+Aspect ratio: 16:9 landscape format suitable for presentation slides.
+
+REMINDER: Generate ONLY visuals - zero text elements.`;
 }
 
 export async function generateSlideImage(

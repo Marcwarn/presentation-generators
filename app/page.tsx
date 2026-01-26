@@ -6,6 +6,7 @@ import InputForm from "@/components/InputForm";
 import StyleSelector from "@/components/StyleSelector";
 import PreviewPanel from "@/components/PreviewPanel";
 import DownloadButton from "@/components/DownloadButton";
+import ShareButton from "@/components/ShareButton";
 import HistoryPanel from "@/components/HistoryPanel";
 import SlideEditor from "@/components/SlideEditor";
 import {
@@ -202,15 +203,19 @@ export default function Home() {
               />
             </div>
 
-            {/* Download and New Presentation Buttons */}
+            {/* Download, Share and New Presentation Buttons */}
             {presentation && (
-              <div className="flex gap-3">
+              <div className="flex gap-3 flex-wrap">
                 <DownloadButton
                   presentation={presentation}
                   style={style}
                   language={language}
                   disabled={isLoading}
                   parts={presentation.input.presentationParts}
+                />
+                <ShareButton
+                  presentationId={presentation.id}
+                  language={language}
                 />
                 <button
                   onClick={() => {

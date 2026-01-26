@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { History, Trash2, Clock, ChevronRight } from "lucide-react";
+import { History, Trash2, Clock, ChevronRight, Loader2 } from "lucide-react";
 import { GeneratedPresentation, Language, translations } from "@/lib/types";
-import { getPresentations, deletePresentation, clearPresentations } from "@/lib/storage";
+import { getPresentationsAsync, deletePresentation, clearPresentations } from "@/lib/storage";
 
 interface HistoryPanelProps {
   onLoad: (presentation: GeneratedPresentation) => void;
@@ -18,19 +18,34 @@ export default function HistoryPanel({
 }: HistoryPanelProps) {
   const [presentations, setPresentations] = useState<GeneratedPresentation[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const t = translations[language];
 
+  // Load presentations from server on mount and when currentPresentationId changes
   useEffect(() => {
-    setPresentations(getPresentations());
+    const loadPresentations = async () => {
+      setIsLoading(true);
+      try {
+        const loaded = await getPresentationsAsync();
+        setPresentations(loaded);
+      } catch (error) {
+        console.error("Failed to load presentations:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadPresentations();
   }, [currentPresentationId]);
 
-  const handleDelete = (id: string, e: React.MouseEvent) => {
+  const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     deletePresentation(id);
-    setPresentations(getPresentations());
+    // Update local state immediately
+    setPresentations((prev) => prev.filter((p) => p.id !== id));
   };
 
-  const handleClearAll = () => {
+  const handleClearAll = async () => {
     if (confirm(language === "sv" ? "Är du säker på att du vill ta bort all historik?" : "Are you sure you want to clear all history?")) {
       clearPresentations();
       setPresentations([]);
@@ -46,6 +61,20 @@ export default function HistoryPanel({
       minute: "2-digit",
     });
   };
+
+  // Show loading state or nothing if no presentations
+  if (isLoading) {
+    return (
+      <div className="bg-gray-900/50 rounded-2xl border border-gray-800 overflow-hidden">
+        <div className="px-6 py-4 flex items-center gap-2">
+          <Loader2 className="w-5 h-5 text-pink-400 animate-spin" />
+          <span className="text-gray-400">
+            {language === "sv" ? "Laddar historik..." : "Loading history..."}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   if (presentations.length === 0) {
     return null;
@@ -73,6 +102,12 @@ export default function HistoryPanel({
 
       {isOpen && (
         <div className="px-4 pb-4">
+          {/* Database notice */}
+          <p className="text-xs text-gray-500 mb-3 italic">
+            {language === "sv"
+              ? "Din historik sparas säkert i molnet"
+              : "Your history is securely saved in the cloud"}
+          </p>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {presentations.map((presentation) => (
               <div
