@@ -497,6 +497,66 @@ export default function InputForm({
         </p>
       </div>
 
+      {/* Custom Prompt Section - moved up for visibility */}
+      <div className="border border-purple-500/30 rounded-lg p-4 bg-purple-900/10">
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+          <MessageSquarePlus className="w-4 h-4 text-purple-400" />
+          {t.customPrompt}
+        </label>
+        <textarea
+          value={customPrompt}
+          onChange={(e) => setCustomPrompt(e.target.value)}
+          placeholder={t.customPromptPlaceholder}
+          rows={3}
+          className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none mb-3"
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={handleEnhancePrompt}
+            disabled={isEnhancingPrompt || !topic.trim()}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              isEnhancingPrompt
+                ? "bg-purple-700 text-purple-200 cursor-wait"
+                : enhanceStatus === "success"
+                ? "bg-green-600 text-white"
+                : enhanceStatus === "error"
+                ? "bg-red-600 text-white"
+                : "bg-purple-600 hover:bg-purple-500 text-white"
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
+          >
+            {isEnhancingPrompt ? (
+              <>
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {t.enhancingPrompt}
+              </>
+            ) : enhanceStatus === "success" ? (
+              <>✓ {t.promptEnhanced}</>
+            ) : enhanceStatus === "error" ? (
+              <>✗ {t.promptEnhanceError}</>
+            ) : (
+              <>
+                <Wand2 className="w-4 h-4" />
+                {t.enhancePrompt}
+              </>
+            )}
+          </button>
+          {customPrompt && (
+            <button
+              type="button"
+              onClick={() => setCustomPrompt("")}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-800/50 hover:bg-red-900/30 text-gray-400 hover:text-red-400 border border-gray-700 hover:border-red-500/50 transition-all"
+            >
+              <Trash2 className="w-4 h-4" />
+              {language === "sv" ? "Rensa" : "Clear"}
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Presentation Type Selection */}
       <div>
         <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
@@ -715,89 +775,6 @@ export default function InputForm({
               : `📁 ${parts} separate files will be generated with ~${Math.ceil(slideCount / parts)} slides each`}
           </p>
         )}
-      </div>
-
-      {/* Custom Prompt Section */}
-      <div className="border border-purple-500/30 rounded-lg p-4 bg-purple-900/10">
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
-          <MessageSquarePlus className="w-4 h-4 text-purple-400" />
-          {t.customPrompt}
-        </label>
-        <textarea
-          value={customPrompt}
-          onChange={(e) => setCustomPrompt(e.target.value)}
-          placeholder={t.customPromptPlaceholder}
-          rows={4}
-          className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none mb-3"
-        />
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Enhance with AI button */}
-          <button
-            type="button"
-            onClick={handleEnhancePrompt}
-            disabled={isEnhancingPrompt || !topic.trim()}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              isEnhancingPrompt
-                ? "bg-purple-700 text-purple-200 cursor-wait"
-                : enhanceStatus === "success"
-                ? "bg-green-600 text-white"
-                : enhanceStatus === "error"
-                ? "bg-red-600 text-white"
-                : "bg-purple-600 hover:bg-purple-500 text-white"
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            {isEnhancingPrompt ? (
-              <>
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                {t.enhancingPrompt}
-              </>
-            ) : enhanceStatus === "success" ? (
-              <>✓ {t.promptEnhanced}</>
-            ) : enhanceStatus === "error" ? (
-              <>✗ {t.promptEnhanceError}</>
-            ) : (
-              <>
-                <Wand2 className="w-4 h-4" />
-                {t.enhancePrompt}
-              </>
-            )}
-          </button>
-
-          {/* Regenerate AI suggestions button - only show if there's content */}
-          {customPrompt && customPrompt.includes("---") && (
-            <button
-              type="button"
-              onClick={handleEnhancePrompt}
-              disabled={isEnhancingPrompt || !topic.trim()}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-700 hover:bg-gray-600 text-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              title={language === "sv" ? "Generera nya AI-förslag" : "Generate new AI suggestions"}
-            >
-              <RefreshCw className="w-4 h-4" />
-              {language === "sv" ? "Nya förslag" : "New suggestions"}
-            </button>
-          )}
-
-          {/* Clear prompt button - only show if there's content */}
-          {customPrompt && (
-            <button
-              type="button"
-              onClick={() => setCustomPrompt("")}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-800/50 hover:bg-red-900/30 text-gray-400 hover:text-red-400 border border-gray-700 hover:border-red-500/50 transition-all"
-              title={language === "sv" ? "Rensa instruktioner" : "Clear instructions"}
-            >
-              <Trash2 className="w-4 h-4" />
-              {language === "sv" ? "Rensa" : "Clear"}
-            </button>
-          )}
-        </div>
-        <p className="text-xs text-gray-500 mt-2">
-          {language === "sv"
-            ? "Få AI-hjälp med perspektiv, vinklar och vad du kan ha missat"
-            : "Get AI help with perspectives, angles, and what you might have missed"}
-        </p>
       </div>
 
       {/* Submit Button */}

@@ -163,9 +163,9 @@ export async function generatePptx(
   const palette = getEffectivePalette(style);
   const fonts = fontMappings[style.fontStyle];
 
-  pptx.author = "TED Talk Generator";
+  pptx.author = "Keynote Builder";
   pptx.title = presentation.title;
-  pptx.subject = "TED Talk Presentation";
+  pptx.subject = "Keynote Presentation";
   pptx.company = "Generated with AI";
 
   pptx.defineSlideMaster({

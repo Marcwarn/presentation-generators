@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "TED Talk Generator",
-  description: "Transform your content into professional TED Talk-style presentations",
+  title: "Keynote Builder",
+  description: "Transform your content into powerful keynote presentations",
 };
 
 export default function RootLayout({

@@ -528,7 +528,7 @@ export default function PreviewPanel({
                   prev === 0 ? slides.length - 1 : prev - 1
                 )
               }
-              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-all"
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-all z-20"
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
@@ -538,7 +538,7 @@ export default function PreviewPanel({
                   prev === slides.length - 1 ? 0 : prev + 1
                 )
               }
-              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-all"
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-all z-20"
             >
               <ChevronRight className="w-6 h-6" />
             </button>
