@@ -6,9 +6,10 @@ import {
   SlideType,
 } from "./types";
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+// Check for API key at module load time for better error messages
+const apiKey = process.env.ANTHROPIC_API_KEY;
+
+const client = apiKey ? new Anthropic({ apiKey }) : null;
 
 const SYSTEM_PROMPT_EN = `You are an expert at creating professional keynote presentations for Doings - a Swedish consultancy that develops culture, structure, communication and the right behaviors for sustainable change.
 
@@ -480,23 +481,47 @@ function validateSlide(slide: Partial<Slide>): Slide {
 export async function generatePresentation(
   input: PresentationInput
 ): Promise<Omit<GeneratedPresentation, "createdAt" | "input" | "style">> {
+  // Check if API key is configured
+  if (!client) {
+    throw new Error("ANTHROPIC_API_KEY is not configured. Please add it to your environment variables in Vercel.");
+  }
+
   const systemPrompt = input.language === "sv" ? SYSTEM_PROMPT_SV : SYSTEM_PROMPT_EN;
 
   // Calculate max_tokens based on slide count (approximately 300 tokens per slide)
   const slideCount = input.slideCount || getSlideCountFromDuration(input.duration);
   const maxTokens = Math.min(Math.max(4096, slideCount * 400), 16000);
 
-  const message = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
-    max_tokens: maxTokens,
-    messages: [
-      {
-        role: "user",
-        content: buildUserPrompt(input),
-      },
-    ],
-    system: systemPrompt,
-  });
+  let message;
+  try {
+    message = await client.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: maxTokens,
+      messages: [
+        {
+          role: "user",
+          content: buildUserPrompt(input),
+        },
+      ],
+      system: systemPrompt,
+    });
+  } catch (apiError) {
+    console.error("Claude API error:", apiError);
+    if (apiError instanceof Error) {
+      // Provide clearer error messages for common issues
+      if (apiError.message.includes("401") || apiError.message.includes("authentication")) {
+        throw new Error("Invalid ANTHROPIC_API_KEY. Please check your API key in Vercel environment variables.");
+      }
+      if (apiError.message.includes("429")) {
+        throw new Error("Rate limit exceeded. Please wait a moment and try again.");
+      }
+      if (apiError.message.includes("500") || apiError.message.includes("503")) {
+        throw new Error("Claude API is temporarily unavailable. Please try again in a few moments.");
+      }
+      throw new Error(`Claude API error: ${apiError.message}`);
+    }
+    throw new Error("Failed to connect to Claude API. Please check your configuration.");
+  }
 
   const responseText =
     message.content[0].type === "text" ? message.content[0].text : "";
