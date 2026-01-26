@@ -76,6 +76,10 @@ export interface GenerateResponse {
   success: boolean;
   presentation?: GeneratedPresentation;
   error?: string;
+  imageStats?: {
+    imagesGenerated: number;
+    errors: number;
+  };
 }
 
 // Translations

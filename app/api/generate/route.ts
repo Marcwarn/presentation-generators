@@ -22,12 +22,20 @@ async function generateSlideImages(
   slides: Slide[],
   imageStyle: ImageStyle,
   topic: string
-): Promise<Slide[]> {
+): Promise<{ slides: Slide[]; imagesGenerated: number; errors: number }> {
   const googleApiKey = process.env.GOOGLE_AI_API_KEY;
 
-  if (!googleApiKey || imageStyle === 'none') {
-    return slides;
+  if (!googleApiKey) {
+    console.warn('GOOGLE_AI_API_KEY not configured - skipping image generation');
+    return { slides, imagesGenerated: 0, errors: 0 };
   }
+
+  if (imageStyle === 'none') {
+    return { slides, imagesGenerated: 0, errors: 0 };
+  }
+
+  let imagesGenerated = 0;
+  let errors = 0;
 
   const generatorStyle = getGeneratorStyle(imageStyle);
 
@@ -44,21 +52,26 @@ async function generateSlideImages(
       }
 
       try {
+        console.log(`Generating image for slide ${index + 1}: "${slide.title.substring(0, 50)}..."`);
         const prompt = buildSlidePrompt(slide, topic, imageStyle);
         const image = await generateImage(prompt, googleApiKey, generatorStyle);
+        imagesGenerated++;
+        console.log(`✓ Image generated for slide ${index + 1}`);
 
         return {
           ...slide,
           image: `data:${image.mimeType};base64,${image.base64}`,
         };
       } catch (error) {
-        console.error(`Failed to generate image for slide ${index + 1}:`, error);
+        errors++;
+        console.error(`✗ Failed to generate image for slide ${index + 1}:`, error instanceof Error ? error.message : error);
         return slide; // Return slide without image on error
       }
     })
   );
 
-  return slidesWithImages;
+  console.log(`Image generation complete: ${imagesGenerated} generated, ${errors} failed`);
+  return { slides: slidesWithImages, imagesGenerated, errors };
 }
 
 function buildSlidePrompt(slide: Slide, topic: string, imageStyle: ImageStyle): string {
@@ -93,18 +106,22 @@ export async function POST(request: NextRequest) {
     const presentation = await generatePresentation(body.input);
 
     // If image style is set, generate images for slides
+    let imageStats = { imagesGenerated: 0, errors: 0 };
     if (body.input.imageStyle && body.input.imageStyle !== 'none') {
       console.log(`Generating ${body.input.imageStyle} images for slides...`);
-      presentation.slides = await generateSlideImages(
+      const result = await generateSlideImages(
         presentation.slides,
         body.input.imageStyle,
         body.input.topic
       );
+      presentation.slides = result.slides;
+      imageStats = { imagesGenerated: result.imagesGenerated, errors: result.errors };
     }
 
     return NextResponse.json({
       success: true,
       presentation,
+      imageStats, // Include stats so frontend can show feedback
     } as GenerateResponse);
   } catch (error) {
     console.error("Generate API error:", error);

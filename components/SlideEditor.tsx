@@ -50,7 +50,11 @@ export default function SlideEditor({
   };
 
   const handleImageGenerated = (imageBase64: string) => {
-    setEditedSlide((prev) => ({ ...prev, image: imageBase64 }));
+    // Update local state
+    const updatedSlide = { ...editedSlide, image: imageBase64 };
+    setEditedSlide(updatedSlide);
+    // Auto-save the image immediately so user doesn't have to click "Save"
+    onSave(updatedSlide);
   };
 
   const removeImage = () => {

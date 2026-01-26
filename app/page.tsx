@@ -61,6 +61,18 @@ export default function Home() {
 
       setPresentation(newPresentation);
       savePresentation(newPresentation);
+
+      // Show image generation stats if applicable
+      if (data.imageStats && input.imageStyle !== 'none') {
+        const { imagesGenerated, errors } = data.imageStats;
+        if (imagesGenerated > 0 || errors > 0) {
+          const message = language === 'sv'
+            ? `${imagesGenerated} bilder genererades${errors > 0 ? `, ${errors} misslyckades` : ''}`
+            : `${imagesGenerated} images generated${errors > 0 ? `, ${errors} failed` : ''}`;
+          // Use a subtle notification instead of alert
+          console.log('Image generation stats:', message);
+        }
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "An unexpected error occurred"
