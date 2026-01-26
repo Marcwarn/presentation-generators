@@ -1,9 +1,16 @@
-// Google Vertex AI Imagen 3 Image Generation
+// Google Gemini Image Generation
+// Supports Gemini 2.0 Flash and future models
 
 export interface GeneratedImage {
   base64: string;
   mimeType: string;
 }
+
+// Available Gemini models with image generation capability
+const GEMINI_MODELS = [
+  'gemini-2.0-flash-exp-image-generation',  // Primary - Gemini 2.0 Flash
+  'gemini-2.0-flash',                        // Fallback
+];
 
 export async function generateImage(
   prompt: string,
@@ -12,63 +19,96 @@ export async function generateImage(
 ): Promise<GeneratedImage> {
   const enhancedPrompt = buildEnhancedPrompt(prompt, style);
 
-  // Try Imagen 3 via Generative Language API
+  // Try each model until one works
+  let lastError: Error | null = null;
+
+  for (const model of GEMINI_MODELS) {
+    try {
+      const result = await tryGenerateWithModel(model, enhancedPrompt, apiKey);
+      if (result) {
+        return result;
+      }
+    } catch (error) {
+      console.log(`Model ${model} failed, trying next...`);
+      lastError = error as Error;
+    }
+  }
+
+  throw lastError || new Error('All Gemini models failed to generate image');
+}
+
+async function tryGenerateWithModel(
+  model: string,
+  prompt: string,
+  apiKey: string
+): Promise<GeneratedImage | null> {
   const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        instances: [
-          { prompt: enhancedPrompt }
+        contents: [
+          {
+            parts: [
+              { text: prompt }
+            ]
+          }
         ],
-        parameters: {
-          sampleCount: 1,
-          aspectRatio: '16:9',
-          personGeneration: 'DONT_ALLOW',
-          safetySetting: 'BLOCK_MEDIUM_AND_ABOVE',
-        },
+        generationConfig: {
+          responseModalities: ["TEXT", "IMAGE"]
+        }
       }),
     }
   );
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Imagen API error:', response.status, errorText);
-    throw new Error(`Google Imagen API error (${response.status}): ${errorText}`);
+    console.error(`Gemini API error (${model}):`, response.status, errorText);
+    throw new Error(`Gemini API error (${response.status}): ${errorText}`);
   }
 
   const data = await response.json();
 
-  if (!data.predictions || data.predictions.length === 0) {
-    throw new Error('No image generated from Imagen');
+  // Extract image from Gemini response
+  if (!data.candidates || data.candidates.length === 0) {
+    throw new Error('No response from Gemini');
   }
 
-  // Imagen returns bytesBase64Encoded
+  const parts = data.candidates[0]?.content?.parts || [];
+  const imagePart = parts.find((part: any) => part.inlineData);
+
+  if (!imagePart || !imagePart.inlineData) {
+    // No image in response - might be a text-only response
+    return null;
+  }
+
   return {
-    base64: data.predictions[0].bytesBase64Encoded,
-    mimeType: 'image/png',
+    base64: imagePart.inlineData.data,
+    mimeType: imagePart.inlineData.mimeType || 'image/png',
   };
 }
 
 function buildEnhancedPrompt(prompt: string, style: string): string {
   const styleModifiers: Record<string, string> = {
-    photorealistic: 'Professional photography, high resolution, realistic lighting, corporate style',
-    artistic: 'Artistic illustration, vibrant colors, creative composition, modern design',
-    minimalist: 'Minimalist design, clean lines, simple shapes, professional presentation style, dark background with accent colors',
+    photorealistic: 'Professional photography, high resolution, realistic lighting, corporate style, no text or words in the image',
+    artistic: 'Artistic illustration, vibrant colors, creative composition, modern design, abstract shapes, no text or words in the image',
+    minimalist: 'Minimalist design, clean lines, simple geometric shapes, professional presentation style, dark background with subtle accent colors, no text or words in the image',
   };
 
-  return `${prompt}. ${styleModifiers[style]}. Suitable for a professional presentation slide. 16:9 aspect ratio.`;
+  return `Generate an image: ${prompt}. Style: ${styleModifiers[style]}. The image should be suitable for a professional presentation slide with 16:9 aspect ratio. Do NOT include any text, words, letters, or numbers in the image.`;
 }
 
 export async function generateSlideImage(
   slideTitle: string,
   slideContent: string,
-  apiKey: string
+  apiKey: string,
+  style: 'photorealistic' | 'artistic' | 'minimalist' = 'minimalist'
 ): Promise<GeneratedImage> {
-  const prompt = `Create a visual representation for a presentation slide about: "${slideTitle}". Context: ${slideContent.substring(0, 200)}`;
+  // Create a visual concept prompt based on slide content
+  const prompt = `Create a visual representation for a presentation slide about: "${slideTitle}". The concept should convey: ${slideContent.substring(0, 150)}`;
 
-  return generateImage(prompt, apiKey, 'minimalist');
+  return generateImage(prompt, apiKey, style);
 }
