@@ -646,8 +646,8 @@ export default function InputForm({
         {imageStyle !== "none" && (
           <p className="text-xs text-amber-400/80 mt-2">
             {language === "sv"
-              ? "⚡ AI-bilder genereras med Google Imagen 3. Kräver GOOGLE_AI_API_KEY i miljövariabler."
-              : "⚡ AI images generated with Google Imagen 3. Requires GOOGLE_AI_API_KEY in environment."}
+              ? "⚡ AI-bilder genereras med Gemini 2.0 Flash. Kräver GOOGLE_AI_API_KEY i miljövariabler."
+              : "⚡ AI images generated with Gemini 2.0 Flash. Requires GOOGLE_AI_API_KEY in environment."}
           </p>
         )}
       </div>
