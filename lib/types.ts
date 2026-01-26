@@ -47,6 +47,7 @@ export interface PresentationInput {
   imageStyle: ImageStyle;
   slideCount: SlideCount;
   customPrompt?: string; // User's custom instructions
+  customPrompts?: Record<string, string>; // Per-setting custom prompts (Persona system)
   presentationParts: PresentationParts; // Split into multiple files
 }
 

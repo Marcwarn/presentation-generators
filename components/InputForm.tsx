@@ -15,6 +15,9 @@ import {
   PresentationParts,
   translations,
 } from "@/lib/types";
+import PromptEditor from "./PromptEditor";
+import PersonaSelector from "./PersonaSelector";
+import { Persona, getPromptKey } from "@/lib/prompts";
 
 interface InputFormProps {
   onSubmit: (input: PresentationInput) => void;
@@ -76,6 +79,7 @@ export default function InputForm({
   const [slideCount, setSlideCount] = useState<SlideCount>(20);
   const [parts, setParts] = useState<PresentationParts>(1);
   const [customPrompt, setCustomPrompt] = useState("");
+  const [customPrompts, setCustomPrompts] = useState<Record<string, string>>({});
   const [isEnhancingPrompt, setIsEnhancingPrompt] = useState(false);
   const [enhanceStatus, setEnhanceStatus] = useState<"idle" | "success" | "error">("idle");
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
@@ -98,6 +102,28 @@ export default function InputForm({
     };
   }, [mediaRecorder]);
 
+  // Handle custom prompt change for a specific category/value
+  const handlePromptChange = (category: string, value: string, prompt: string | undefined) => {
+    const key = getPromptKey(category, value);
+    setCustomPrompts((prev) => {
+      if (prompt === undefined) {
+        const { [key]: _, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [key]: prompt };
+    });
+  };
+
+  // Load persona
+  const handleLoadPersona = (persona: Persona) => {
+    setCustomPrompts(persona.customPrompts);
+  };
+
+  // Clear all custom prompts
+  const handleClearCustomPrompts = () => {
+    setCustomPrompts({});
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim() || !topic.trim()) return;
@@ -115,6 +141,7 @@ export default function InputForm({
       slideCount,
       presentationParts: parts,
       customPrompt: customPrompt.trim() || undefined,
+      customPrompts: Object.keys(customPrompts).length > 0 ? customPrompts : undefined,
     });
   };
 
@@ -318,36 +345,66 @@ export default function InputForm({
     }
   };
 
+  // Helper to render a section with prompt editor
+  const renderSectionWithEditor = (
+    category: "audience" | "tonality" | "presentationType" | "knowledgeLevel" | "imageStyle",
+    value: string,
+    label: React.ReactNode,
+    children: React.ReactNode
+  ) => (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
+          {label}
+        </label>
+        <PromptEditor
+          category={category}
+          value={value}
+          language={language}
+          customPrompt={customPrompts[getPromptKey(category, value)]}
+          onPromptChange={(prompt) => handlePromptChange(category, value, prompt)}
+          disabled={isLoading}
+        />
+      </div>
+      {children}
+    </div>
+  );
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Language Selection */}
-      <div>
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
-          <Globe className="w-4 h-4 text-pink-400" />
-          {t.language}
-        </label>
+      {/* Persona Selector & Language */}
+      <div className="flex flex-wrap items-start gap-4 justify-between">
+        <PersonaSelector
+          language={language}
+          customPrompts={customPrompts}
+          onLoadPersona={handleLoadPersona}
+          onClearCustomPrompts={handleClearCustomPrompts}
+          disabled={isLoading}
+        />
+
+        {/* Language Selection */}
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => onLanguageChange("en")}
-            className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
               language === "en"
                 ? "bg-pink-500 text-white"
                 : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
             }`}
           >
-            🇬🇧 English
+            🇬🇧 EN
           </button>
           <button
             type="button"
             onClick={() => onLanguageChange("sv")}
-            className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+            className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
               language === "sv"
                 ? "bg-pink-500 text-white"
                 : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
             }`}
           >
-            🇸🇪 Svenska
+            🇸🇪 SV
           </button>
         </div>
       </div>
@@ -557,12 +614,14 @@ export default function InputForm({
         </div>
       </div>
 
-      {/* Presentation Type Selection */}
-      <div>
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+      {/* Presentation Type Selection with Prompt Editor */}
+      {renderSectionWithEditor(
+        "presentationType",
+        presentationType,
+        <>
           <Target className="w-4 h-4 text-pink-400" />
           {t.presentationType}
-        </label>
+        </>,
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {presentationTypes.map((pt) => (
             <button
@@ -580,14 +639,16 @@ export default function InputForm({
             </button>
           ))}
         </div>
-      </div>
+      )}
 
-      {/* Audience Selection */}
-      <div>
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+      {/* Audience Selection with Prompt Editor */}
+      {renderSectionWithEditor(
+        "audience",
+        audience,
+        <>
           <Users className="w-4 h-4 text-pink-400" />
           {t.audience}
-        </label>
+        </>,
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {audiences.map((a) => (
             <button
@@ -604,14 +665,16 @@ export default function InputForm({
             </button>
           ))}
         </div>
-      </div>
+      )}
 
-      {/* Knowledge Level Selection */}
-      <div>
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+      {/* Knowledge Level Selection with Prompt Editor */}
+      {renderSectionWithEditor(
+        "knowledgeLevel",
+        knowledgeLevel,
+        <>
           <GraduationCap className="w-4 h-4 text-pink-400" />
           {t.knowledgeLevel}
-        </label>
+        </>,
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {knowledgeLevels.map((kl) => (
             <button
@@ -629,7 +692,7 @@ export default function InputForm({
             </button>
           ))}
         </div>
-      </div>
+      )}
 
       {/* Duration Selection */}
       <div>
@@ -655,12 +718,14 @@ export default function InputForm({
         </div>
       </div>
 
-      {/* Tonality Selection */}
-      <div>
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+      {/* Tonality Selection with Prompt Editor */}
+      {renderSectionWithEditor(
+        "tonality",
+        tonality,
+        <>
           <BookOpen className="w-4 h-4 text-pink-400" />
           {t.tonality}
-        </label>
+        </>,
         <div className="flex gap-2">
           {tonalities.map((ton) => (
             <button
@@ -678,39 +743,43 @@ export default function InputForm({
             </button>
           ))}
         </div>
-      </div>
+      )}
 
-      {/* Image Style Selection */}
-      <div>
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+      {/* Image Style Selection with Prompt Editor */}
+      {renderSectionWithEditor(
+        "imageStyle",
+        imageStyle,
+        <>
           <ImageIcon className="w-4 h-4 text-pink-400" />
           {t.imageStyle}
-        </label>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {imageStyles.map((is) => (
-            <button
-              key={is.value}
-              type="button"
-              onClick={() => setImageStyle(is.value)}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                imageStyle === is.value
-                  ? "bg-pink-500 text-white"
-                  : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
-              }`}
-            >
-              <span className="mr-1">{is.emoji}</span>
-              {t.imageStyles[is.value]}
-            </button>
-          ))}
-        </div>
-        {imageStyle !== "none" && (
-          <p className="text-xs text-amber-400/80 mt-2">
-            {language === "sv"
-              ? "⚡ AI-bilder genereras med Gemini 2.0 Flash. Kräver GOOGLE_AI_API_KEY i miljövariabler."
-              : "⚡ AI images generated with Gemini 2.0 Flash. Requires GOOGLE_AI_API_KEY in environment."}
-          </p>
-        )}
-      </div>
+        </>,
+        <>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {imageStyles.map((is) => (
+              <button
+                key={is.value}
+                type="button"
+                onClick={() => setImageStyle(is.value)}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  imageStyle === is.value
+                    ? "bg-pink-500 text-white"
+                    : "bg-gray-800/50 text-gray-400 hover:bg-gray-700/50 border border-gray-700"
+                }`}
+              >
+                <span className="mr-1">{is.emoji}</span>
+                {t.imageStyles[is.value]}
+              </button>
+            ))}
+          </div>
+          {imageStyle !== "none" && (
+            <p className="text-xs text-amber-400/80 mt-2">
+              {language === "sv"
+                ? "⚡ AI-bilder genereras med Gemini 2.0 Flash. Kräver GOOGLE_AI_API_KEY i miljövariabler."
+                : "⚡ AI images generated with Gemini 2.0 Flash. Requires GOOGLE_AI_API_KEY in environment."}
+            </p>
+          )}
+        </>
+      )}
 
       {/* Slide Count Selection */}
       <div>

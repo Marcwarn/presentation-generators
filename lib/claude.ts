@@ -5,6 +5,7 @@ import {
   Slide,
   SlideType,
 } from "./types";
+import { buildCombinedPrompt, getPromptKey, getDefaultPrompt } from "./prompts";
 
 // Check for API key at module load time for better error messages
 const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -231,7 +232,20 @@ function getSlideCountFromDuration(duration: number): number {
   }
 }
 
-function getPresentationTypeInstructions(type: string, lang: string): string {
+function getPresentationTypeInstructions(type: string, lang: string, customPrompts?: Record<string, string>): string {
+  // Check for custom prompt first
+  const key = getPromptKey("presentationType", type);
+  if (customPrompts && customPrompts[key]) {
+    return customPrompts[key];
+  }
+
+  // Fall back to default prompt from prompts.ts
+  const customDefault = getDefaultPrompt("presentationType", type, lang as "en" | "sv");
+  if (customDefault) {
+    return customDefault;
+  }
+
+  // Legacy fallback (should not be reached if prompts.ts is complete)
   const instructions: Record<string, { en: string; sv: string }> = {
     keynote: {
       en: "This is a KEYNOTE presentation - focus on inspiration, big ideas, emotional storytelling, and a powerful call to action. Use dramatic openings and memorable closing statements.",
@@ -309,7 +323,20 @@ TON: Självsäker men inte arrogant. Visa genuin förståelse. Var specifik om l
   return instructions[type]?.[lang === "sv" ? "sv" : "en"] || instructions.keynote[lang === "sv" ? "sv" : "en"];
 }
 
-function getKnowledgeLevelInstructions(level: string, lang: string): string {
+function getKnowledgeLevelInstructions(level: string, lang: string, customPrompts?: Record<string, string>): string {
+  // Check for custom prompt first
+  const key = getPromptKey("knowledgeLevel", level);
+  if (customPrompts && customPrompts[key]) {
+    return customPrompts[key];
+  }
+
+  // Fall back to default prompt from prompts.ts
+  const customDefault = getDefaultPrompt("knowledgeLevel", level, lang as "en" | "sv");
+  if (customDefault) {
+    return customDefault;
+  }
+
+  // Legacy fallback
   const instructions: Record<string, { en: string; sv: string }> = {
     beginner: {
       en: "AUDIENCE KNOWLEDGE LEVEL: Beginner - Explain all terms and concepts, avoid jargon, use simple analogies, provide background context, don't assume prior knowledge.",
@@ -331,7 +358,20 @@ function getKnowledgeLevelInstructions(level: string, lang: string): string {
   return instructions[level]?.[lang === "sv" ? "sv" : "en"] || instructions.mixed[lang === "sv" ? "sv" : "en"];
 }
 
-function getAudienceInstructions(audience: string, lang: string): string {
+function getAudienceInstructions(audience: string, lang: string, customPrompts?: Record<string, string>): string {
+  // Check for custom prompt first
+  const key = getPromptKey("audience", audience);
+  if (customPrompts && customPrompts[key]) {
+    return customPrompts[key];
+  }
+
+  // Fall back to default prompt from prompts.ts
+  const customDefault = getDefaultPrompt("audience", audience, lang as "en" | "sv");
+  if (customDefault) {
+    return customDefault;
+  }
+
+  // Legacy fallback
   const instructions: Record<string, { en: string; sv: string }> = {
     "c-suite": {
       en: "TARGET AUDIENCE: C-Suite executives - Focus on strategic impact, ROI, competitive advantage, and bottom-line results. Be concise, data-driven, and solution-oriented.",
@@ -369,6 +409,37 @@ function getAudienceInstructions(audience: string, lang: string): string {
   return instructions[audience]?.[lang === "sv" ? "sv" : "en"] || instructions.general[lang === "sv" ? "sv" : "en"];
 }
 
+function getTonalityInstructions(tonality: string, lang: string, customPrompts?: Record<string, string>): string {
+  // Check for custom prompt first
+  const key = getPromptKey("tonality", tonality);
+  if (customPrompts && customPrompts[key]) {
+    return customPrompts[key];
+  }
+
+  // Fall back to default prompt from prompts.ts
+  const customDefault = getDefaultPrompt("tonality", tonality, lang as "en" | "sv");
+  if (customDefault) {
+    return customDefault;
+  }
+
+  // Legacy fallback
+  const instructions: Record<string, { en: string; sv: string }> = {
+    inspiring: {
+      en: "TONALITY: Inspiring - Use uplifting language, share vision, create emotional connection, motivate action.",
+      sv: "TONALITET: Inspirerande - Använd upplyftande språk, dela vision, skapa emotionell koppling, motivera till handling."
+    },
+    informative: {
+      en: "TONALITY: Informative - Focus on facts, clarity, and understanding. Be objective and thorough.",
+      sv: "TONALITET: Informativ - Fokusera på fakta, tydlighet och förståelse. Var objektiv och grundlig."
+    },
+    provocative: {
+      en: "TONALITY: Provocative - Challenge assumptions, ask tough questions, disrupt conventional thinking.",
+      sv: "TONALITET: Provocerande - Utmana antaganden, ställ tuffa frågor, störa konventionellt tänkande."
+    }
+  };
+  return instructions[tonality]?.[lang === "sv" ? "sv" : "en"] || instructions.inspiring[lang === "sv" ? "sv" : "en"];
+}
+
 function buildUserPrompt(input: PresentationInput): string {
   // Use explicit slideCount if provided, otherwise fall back to duration-based calculation
   const slideCount = input.slideCount || getSlideCountFromDuration(input.duration);
@@ -377,6 +448,7 @@ function buildUserPrompt(input: PresentationInput): string {
 
   const presentationType = input.presentationType || "keynote";
   const knowledgeLevel = input.knowledgeLevel || "mixed";
+  const customPrompts = input.customPrompts;
 
   // Instructions for how to structure larger presentations
   const largePresInstructions = slideCount > 30
@@ -404,15 +476,16 @@ ${input.content}
 
 TOPIC: ${input.topic}
 
-${getPresentationTypeInstructions(presentationType, lang)}
+${getPresentationTypeInstructions(presentationType, lang, customPrompts)}
 
-${getAudienceInstructions(input.audience, lang)}
+${getAudienceInstructions(input.audience, lang, customPrompts)}
 
-${getKnowledgeLevelInstructions(knowledgeLevel, lang)}
+${getKnowledgeLevelInstructions(knowledgeLevel, lang, customPrompts)}
+
+${getTonalityInstructions(input.tonality, lang, customPrompts)}
 
 DURATION: ${input.duration} minutes
 NUMBER OF SLIDES: Exactly ${slideCount} slides (this is critical - generate exactly this many)
-TONALITY: ${input.tonality}
 LANGUAGE: ${langName} - ALL content must be in ${langName}
 ${largePresInstructions}
 ${input.customPrompt ? `
