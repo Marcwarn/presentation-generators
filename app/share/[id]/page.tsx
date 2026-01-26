@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Download, Loader2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { GeneratedPresentation } from "@/lib/types";
 import PreviewPanel from "@/components/PreviewPanel";
-import { downloadPresentation } from "@/lib/pptx-generator";
 
 export default function SharedPresentationPage() {
   const params = useParams();
@@ -15,7 +14,6 @@ export default function SharedPresentationPage() {
   const [presentation, setPresentation] = useState<GeneratedPresentation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     const loadPresentation = async () => {
@@ -40,20 +38,6 @@ export default function SharedPresentationPage() {
       loadPresentation();
     }
   }, [id]);
-
-  const handleDownload = async () => {
-    if (!presentation) return;
-
-    setIsDownloading(true);
-    try {
-      await downloadPresentation(presentation);
-    } catch (error) {
-      console.error("Download failed:", error);
-      alert("Failed to download presentation");
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -108,23 +92,6 @@ export default function SharedPresentationPage() {
             </div>
           </div>
 
-          <button
-            onClick={handleDownload}
-            disabled={isDownloading}
-            className="flex items-center gap-2 px-4 py-2 bg-pink-600 hover:bg-pink-700 disabled:bg-gray-600 text-white rounded-lg transition-colors"
-          >
-            {isDownloading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                <span className="hidden sm:inline">Downloading...</span>
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">Download PowerPoint</span>
-              </>
-            )}
-          </button>
         </div>
       </header>
 
@@ -141,7 +108,7 @@ export default function SharedPresentationPage() {
 
         {/* Info notice */}
         <p className="text-center text-gray-500 text-sm mt-6">
-          Images are not included in shared presentations. Download the PowerPoint to get the full presentation.
+          This is a shared presentation preview. Create your own to download as PowerPoint.
         </p>
 
         {/* CTA */}
