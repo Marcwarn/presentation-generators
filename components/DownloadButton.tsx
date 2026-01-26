@@ -45,7 +45,16 @@ export default function DownloadButton({
       });
 
       if (!response.ok) {
-        throw new Error("Download failed");
+        // Try to get the actual error message from the server
+        let errorMessage = "Download failed";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // If we can't parse JSON, use status text
+          errorMessage = `Download failed: ${response.status} ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const blob = await response.blob();

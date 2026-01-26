@@ -28,7 +28,17 @@ function splitSlidesIntoParts(slides: Slide[], parts: number): Slide[][] {
 
 export async function POST(request: NextRequest) {
   try {
-    const body: DownloadRequest = await request.json();
+    // Parse the request body
+    let body: DownloadRequest;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      return NextResponse.json(
+        { error: "Invalid request: Could not parse JSON body. The request may be too large." },
+        { status: 400 }
+      );
+    }
     const { presentation, style, parts = 1 } = body;
 
     if (!presentation || !presentation.slides || presentation.slides.length === 0) {
@@ -37,6 +47,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    if (!style || !style.palette) {
+      return NextResponse.json(
+        { error: "No style configuration provided" },
+        { status: 400 }
+      );
+    }
+
+    console.log(`Generating PPTX: ${presentation.slides.length} slides, palette: ${style.palette}, parts: ${parts}`);
 
     const safeTitle = presentation.title.replace(/[^a-z0-9]/gi, "_");
 
@@ -93,13 +112,19 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Download API error:", error);
+
+    // Provide more detailed error messages
+    let errorMessage = "Failed to generate PowerPoint file";
+    if (error instanceof Error) {
+      errorMessage = error.message;
+      // Add stack trace for debugging
+      if (error.stack) {
+        console.error("Stack trace:", error.stack);
+      }
+    }
+
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to generate PowerPoint file",
-      },
+      { error: errorMessage },
       { status: 500 }
     );
   }
